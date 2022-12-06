@@ -22,3 +22,7 @@ include(GNUInstallDirs)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(examples)
+
+# need to be at top-level
+enable_testing()
+add_subdirectory(tests)
