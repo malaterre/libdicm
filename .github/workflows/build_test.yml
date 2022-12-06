@@ -1,0 +1,19 @@
+name: Build / test
+on: [push, pull_request]
+jobs:
+  cmake:
+    name: Build and test ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: checkout source
+      uses: actions/checkout@v3
+    - name: configure
+      run: >
+        cmake
+        -B build
+        -Werror=dev
+        ${{ runner.os != 'Windows' && '-DCMAKE_BUILD_TYPE=Debug' || '' }}
+    - name: make
+      run: cmake --build build --config Debug --verbose
+    - name: make check
+      run: ctest --test-dir build --parallel 2 --output-on-failure --no-tests=error --build-config Debug -VV
