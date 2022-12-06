@@ -1,7 +1,7 @@
 #ifndef DICM_H
 #define DICM_H
 
-#include <stddef.h>  /* size_t */
+#include <stddef.h> /* size_t */
 
 /**
  * @defgroup export Export Definitions
@@ -75,11 +75,13 @@ struct dicm_io;
 /* buffer */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_input_buffer_create(struct dicm_io **pself, const void *ptr, size_t len) DICM_NONNULL;
+dicm_input_buffer_create(struct dicm_io **pself, const void *ptr,
+                         size_t len) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_output_buffer_create(struct dicm_io **pself, void *ptr, size_t len) DICM_NONNULL;
+dicm_output_buffer_create(struct dicm_io **pself, void *ptr,
+                          size_t len) DICM_NONNULL;
 
 /* stream */
 DICM_CHECK_RETURN
@@ -93,11 +95,13 @@ dicm_output_stream_create(struct dicm_io **pself) DICM_NONNULL;
 /* file */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_input_file_create(struct dicm_io **pself, const char *filename) DICM_NONNULL;
+dicm_input_file_create(struct dicm_io **pself,
+                       const char *filename) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_output_file_create(struct dicm_io **pself, const char *filename) DICM_NONNULL;
+dicm_output_file_create(struct dicm_io **pself,
+                        const char *filename) DICM_NONNULL;
 
 /* user-defined */
 DICM_CHECK_RETURN
@@ -161,7 +165,8 @@ dicm_parser_create(struct dicm_parser **pself) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_set_input(struct dicm_parser *self, struct dicm_io *io) DICM_NONNULL;
+dicm_parser_set_input(struct dicm_parser *self,
+                      struct dicm_io *io) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
@@ -169,11 +174,13 @@ dicm_parser_next_event(struct dicm_parser *self) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_get_value_length(struct dicm_parser *self, size_t *len) DICM_NONNULL;
+dicm_parser_get_value_length(struct dicm_parser *self,
+                             size_t *len) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_read_value(struct dicm_parser *self, void *ptr, size_t len) DICM_NONNULL;
+dicm_parser_read_value(struct dicm_parser *self, void *ptr,
+                       size_t len) DICM_NONNULL;
 
 /** @} */
 
@@ -190,7 +197,8 @@ dicm_emitter_create(struct dicm_emitter **pself) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_set_output(struct dicm_emitter *self, struct dicm_io *io) DICM_NONNULL;
+dicm_emitter_set_output(struct dicm_emitter *self,
+                        struct dicm_io *io) DICM_NONNULL;
 
 /** @} */
 
