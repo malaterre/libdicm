@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.18.4)
 project(
   libdicm
   VERSION 0.0.1
