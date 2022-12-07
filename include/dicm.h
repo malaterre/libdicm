@@ -2,6 +2,7 @@
 #define DICM_H
 
 #include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 /**
  * @defgroup export Export Definitions
@@ -149,6 +150,11 @@ enum dicm_event_type {
 
 struct dicm_parser;
 
+struct dicm_key {
+  uint32_t tag;
+  uint32_t vr;
+};
+
 /**
  * Create a parser
  *
@@ -171,6 +177,11 @@ dicm_parser_set_input(struct dicm_parser *self,
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_parser_next_event(struct dicm_parser *self) DICM_NONNULL;
+
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_parser_get_key(struct dicm_parser *self,
+                    struct dicm_key *key) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)

@@ -82,6 +82,10 @@ int dicm_parser_delete(struct dicm_parser *self) {
 }
 #endif
 
+int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
+  return dicm_parser_get_key1(self, key);
+}
+
 int dicm_parser_get_value_length(struct dicm_parser *self, size_t *len) {
   return dicm_parser_get_value_length1(self, len);
 }
@@ -97,7 +101,13 @@ int _parser_destroy(void *const self) {
   return 0;
 }
 
-int _parser_get_key(void *const self, struct dicm_key *key) { assert(0); }
+int _parser_get_key(void *const self, struct dicm_key *key) {
+  struct _parser *parser = (struct _parser *)self;
+  struct _item_reader *item_reader = array_back(&parser->item_readers);
+  key->tag = item_reader->da.tag;
+  key->vr = item_reader->da.vr;
+  return 0;
+}
 int _parser_get_value_length(void *const self, size_t *len) {
   struct _parser *parser = (struct _parser *)self;
   struct _item_reader *item_reader = array_back(&parser->item_readers);

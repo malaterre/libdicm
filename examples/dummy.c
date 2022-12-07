@@ -16,6 +16,7 @@ static const char *events[] = {
 int main(int argc, char *argv[]) {
   struct dicm_parser *parser;
   struct dicm_io *io;
+  struct dicm_key key;
   int done = 0;
   /* value */
   char buf[4096];
@@ -56,6 +57,10 @@ int main(int argc, char *argv[]) {
       ...
     */
     switch (etype) {
+    case DICM_ELEMENT_KEY_EVENT:
+      res = dicm_parser_get_key(parser, &key);
+      assert(res == 0);
+      break;
     case DICM_ELEMENT_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
       assert(res == 0);
