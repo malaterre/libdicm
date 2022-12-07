@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(
-  libdicm
+  DICM
   VERSION 0.0.1
   LANGUAGES C)
 
-set(libdicm_SOVERSION "${libdicm_VERSION_MAJOR}")
+set(DICM_SOVERSION "${DICM_VERSION_MAJOR}")
 
 # only export limited set of symbols
 set(CMAKE_C_VISIBILITY_PRESET hidden)
