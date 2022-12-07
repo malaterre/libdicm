@@ -1,36 +1,33 @@
+---
+# Automatic building in CI
+
 name: Build / test
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+    branches: [main]
 jobs:
   cmake:
-    name: Build and test ${{ matrix.name }}
+    name: Build and test
     runs-on: ubuntu-22.04
     steps:
-    - name: checkout source
-      uses: actions/checkout@v3
-    - name: configure
-      run: >
-        cmake
-        -B build
-        -Werror=dev
-        ${{ runner.os != 'Windows' && '-DCMAKE_BUILD_TYPE=Debug' || '' }}
-    - name: make
-      run: cmake --build build --config Debug --verbose
-    - name: make check
-      run: ctest --test-dir build --parallel 2 --output-on-failure --no-tests=error --build-config Debug -VV
-
-  formatting-check:
-    name: Formatting Check
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        path:
-          - 'examples'
-          - 'include'
-          - 'src'
-          - 'tests'
-    steps:
-    - uses: actions/checkout@v3
-    - name: Run clang-format style check for C/C++/Protobuf programs.
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        check-path: ${{ matrix.path }}
+      - name: checkout source
+        uses: actions/checkout@v3
+      - name: configure
+        run: >
+          cmake
+          -B build
+          -Werror=dev
+          ${{ runner.os != 'Windows' && '-DCMAKE_BUILD_TYPE=Debug' || '' }}
+      - name: make
+        run: cmake --build build --config Debug --verbose
+      - name: make check
+        run: >
+          ctest
+          --test-dir build
+          --parallel 2
+          --output-on-failure
+          --no-tests=error
+          --build-config Debug
+          -VV
