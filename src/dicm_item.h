@@ -50,11 +50,6 @@ struct _item_reader {
 typedef uint32_t dicm_tag_t;
 typedef uint32_t dicm_vr_t;
 
-struct dicm_key {
-  dicm_tag_t tag;
-  dicm_vr_t vr;
-};
-
 /* tag */
 
 /* Retrieve the group part from a tag */

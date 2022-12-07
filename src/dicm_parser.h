@@ -32,7 +32,7 @@ struct dicm_parser {
 };
 
 /* common parser interface */
-#define dicm_parser_get_key(t, dk) ((t)->vtable->parser.fp_get_key((t), (dk)))
+#define dicm_parser_get_key1(t, dk) ((t)->vtable->parser.fp_get_key((t), (dk)))
 #define dicm_parser_get_value_length1(t, s)                                    \
   ((t)->vtable->parser.fp_get_value_length((t), (s)))
 #define dicm_parser_read_value1(t, b, s)                                       \
