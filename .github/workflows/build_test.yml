@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: checkout source
         uses: actions/checkout@v3
+      - name: Install analysis tools
+        run: |
+          sudo apt update
+          sudo apt install -y valgrind
       - name: configure
         run: >
           cmake
@@ -25,6 +29,16 @@ jobs:
       - name: make check
         run: >
           ctest
+          --test-dir build
+          --parallel 2
+          --output-on-failure
+          --no-tests=error
+          --build-config Debug
+          -VV
+      - name: valgrind check
+        run: >
+          ctest
+          -T MemCheck
           --test-dir build
           --parallel 2
           --output-on-failure
