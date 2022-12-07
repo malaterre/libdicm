@@ -25,4 +25,6 @@ add_subdirectory(examples)
 
 # need to be at top-level
 enable_testing()
+# retrieve valgrind:
+include(CTest)
 add_subdirectory(tests)

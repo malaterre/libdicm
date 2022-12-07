@@ -1,0 +1,6 @@
+stream-start
+dataset-start
+element-key 00080005
+element-value ISO_IR 100
+dataset-end
+stream-end
