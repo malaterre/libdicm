@@ -1,4 +1,4 @@
-set(dicm_SOURCES dicm_io.c dicm_item.c dicm_parser.c)
+set(dicm_SOURCES dicm_io.c dicm_item.c dicm_parser.c dicm_log.c)
 
 add_library(dicm SHARED ${dicm_SOURCES})
 set_target_properties(dicm PROPERTIES VERSION ${DICM_VERSION} SOVERSION
