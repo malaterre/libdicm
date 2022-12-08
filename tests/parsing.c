@@ -64,7 +64,7 @@ int parsing(int argc, char *argv[]) {
         assert(res == 0);
         size -= len;
       } while (size != 0);
-      fprintf(out, " %.*s", len, buf);
+      fprintf(out, " %.*s", (int)len, buf);
       break;
     }
 

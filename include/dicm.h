@@ -15,6 +15,10 @@
 #define DICM_DECLARE(type) __attribute__((visibility("default"))) type
 #define DICM_CHECK_RETURN __attribute__((__warn_unused_result__))
 #define DICM_NONNULL __attribute__((nonnull))
+#else
+#define DICM_DECLARE(type) __declspec(dllexport) type
+#define DICM_CHECK_RETURN 
+#define DICM_NONNULL 
 #endif
 
 /** @} */
