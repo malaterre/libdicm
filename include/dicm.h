@@ -17,8 +17,8 @@
 #define DICM_NONNULL __attribute__((nonnull))
 #else
 #define DICM_DECLARE(type) __declspec(dllexport) type
-#define DICM_CHECK_RETURN 
-#define DICM_NONNULL 
+#define DICM_CHECK_RETURN
+#define DICM_NONNULL
 #endif
 
 /** @} */
@@ -68,6 +68,15 @@ dicm_get_version(int *major, int *minor, int *patch) DICM_NONNULL;
  */
 DICM_DECLARE(int)
 dicm_delete(void *self) DICM_NONNULL;
+
+/** @} */
+
+/**
+ * @defgroup log Logging
+ * @{
+ */
+DICM_DECLARE(void)
+dicm_configure_log_msg(void (*fp_msg)(int, const char *)) DICM_NONNULL;
 
 /** @} */
 

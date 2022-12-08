@@ -1,5 +1,7 @@
 #include "dicm_io.h"
 
+#include "dicm_log.h"
+
 #include <assert.h>  /* assert */
 #include <errno.h>   /* errno */
 #include <stdbool.h> /* bool */
@@ -65,7 +67,8 @@ static int dicm_io_file_create(struct dicm_io **pself, const char *filename,
       return 0;
     }
   }
-  // log_errno(debug, errsv); // FIXME
+  _log_msg(LOG_ERROR, "Failure to open %s, error reported is: %d", filename,
+           errsv);
   *pself = NULL;
   return errsv;
 }
