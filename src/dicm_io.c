@@ -212,3 +212,24 @@ int dicm_delete(void *self_) {
   struct dicm_io *self = (struct dicm_io *)self_;
   return object_destroy(self);
 }
+
+static struct io_vtable g_stream_vtable = {
+    /* object interface */
+    .object = {.fp_destroy = _stream_destroy},
+    /* io interface */
+    .io = {.fp_read = NULL, .fp_seek = NULL, .fp_write = NULL}};
+
+int dicm_create(struct dicm_io **pself,
+                int (*fp_read)(void *const, void *, size_t),
+                int (*fp_seek)(void *const, long, int), /* can be null */
+                int (*fp_write)(void *const, const void *, size_t)) {
+  struct _stream *self = (struct _stream *)malloc(sizeof(*self));
+  if (self) {
+    *pself = &self->io;
+    g_stream_vtable.io.fp_read = fp_read;
+    self->io.vtable = &g_stream_vtable;
+    return 0;
+  }
+  *pself = NULL;
+  return -1;
+}
