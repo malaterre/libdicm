@@ -32,7 +32,7 @@ struct io_prv_vtable {
 /* common io vtable */
 struct io_vtable {
   struct object_prv_vtable const object;
-  struct io_prv_vtable const io;
+  struct io_prv_vtable /*const*/ io;
 };
 
 /* common io object */

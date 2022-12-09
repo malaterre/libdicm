@@ -136,6 +136,7 @@ dicm_attribute_is_encapsulated_pixel_data(const struct _attribute *da) {
  * other, and we also get the size property for free which allow an easy
  * implementation of is_root.
  */
+// TODO: FAM
 struct array {
   size_t size;
   size_t capacity;

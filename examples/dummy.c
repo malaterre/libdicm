@@ -13,6 +13,18 @@ static const char *events[] = {
     "DICM_SEQUENCE_END_EVENT",
 };
 
+static void my_log(int log_level, const char *msg) {
+  fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
+}
+
+FILE *stream;
+
+static int my_read(void *const io, void *buf, size_t size) {
+  const size_t read = fread(buf, 1, size, stream);
+  const int ret = (int)read;
+  return ret;
+}
+
 int main(int argc, char *argv[]) {
   struct dicm_parser *parser;
   struct dicm_io *io;
@@ -30,7 +42,9 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "usage: dummy [filename]\n");
     exit(1);
   } else {
-    dicm_input_file_create(&io, argv[1]);
+    // dicm_input_file_create(&io, argv[1]);
+    stream = fopen(argv[1], "rb");
+    dicm_create(&io, my_read, NULL, NULL);
   }
 
   if (dicm_parser_create(&parser) < 0) {
@@ -82,6 +96,7 @@ int main(int argc, char *argv[]) {
   /* Destroy the Parser object. */
   dicm_delete(parser);
   dicm_delete(io);
+  fclose(stream);
   return 0;
 
 error:
