@@ -4,23 +4,14 @@
 #include "dicm_private.h"
 
 #include <stddef.h> /* size_t */
-#include <stdio.h>  /* FILE */
 
-#if 0
-struct dicm_io {
-  // According to POSIX.1, if count is greater than SSIZE_MAX, the result
-  // is implementation-defined; see NOTES for the upper limit on Linux.
-  //
-  // On  Linux,  read()  (and  similar system calls) will transfer at
-  // most 0x7ffff000 (2,147,479,552) bytes, returning the number of bytes
-  // actually transferred.  (This is true on both 32-bit and 64-bit
-  // systems.)
-  DICM_CHECK_RETURN int (*fp_read)(struct dicm_io *const, void *,
-                                   size_t) DICM_NONNULL;
-  DICM_CHECK_RETURN int (*fp_write)(struct dicm_io *const, const void *,
-                                    size_t) DICM_NONNULL;
-};
-#endif
+// According to POSIX.1, if count is greater than SSIZE_MAX, the result
+// is implementation-defined; see NOTES for the upper limit on Linux.
+//
+// On  Linux,  read()  (and  similar system calls) will transfer at
+// most 0x7ffff000 (2,147,479,552) bytes, returning the number of bytes
+// actually transferred.  (This is true on both 32-bit and 64-bit
+// systems.)
 
 struct io_prv_vtable {
   DICM_CHECK_RETURN int (*fp_read)(void *const, void *, size_t) DICM_NONNULL;
@@ -32,7 +23,7 @@ struct io_prv_vtable {
 /* common io vtable */
 struct io_vtable {
   struct object_prv_vtable const object;
-  struct io_prv_vtable /*const*/ io;
+  struct io_prv_vtable const io;
 };
 
 /* common io object */
