@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.18.4)
 project(
   DICM
   VERSION 0.0.1
+  DESCRIPTION "libdicm description"
+  HOMEPAGE_URL https://github.com/malaterre/libdicm
   LANGUAGES C)
 
 set(DICM_SOVERSION "${DICM_VERSION_MAJOR}")
