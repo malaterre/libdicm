@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "usage: dummy [filename]\n");
     exit(1);
   } else {
-    dicm_input_file_create(&io, argv[1]);
-    // stream = fopen(argv[1], "rb");
-    // dicm_create(&io, my_read, NULL, NULL);
+    // dicm_input_file_create(&io, argv[1]);
+    stream = fopen(argv[1], "rb");
+    dicm_create(&io, my_read, NULL, NULL);
   }
 
   if (dicm_parser_create(&parser) < 0) {
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
   /* Destroy the Parser object. */
   dicm_delete(parser);
   dicm_delete(io);
-  // fclose(stream);
+  fclose(stream);
   return 0;
 
 error:
