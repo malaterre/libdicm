@@ -52,7 +52,7 @@ dicm_get_version_string(void);
  */
 
 DICM_DECLARE(void)
-dicm_get_version(int *major, int *minor, int *patch) DICM_NONNULL;
+dicm_get_version_numbers(int *major, int *minor, int *patch) DICM_NONNULL;
 
 /** @} */
 
