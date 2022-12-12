@@ -137,6 +137,7 @@ dicm_attribute_is_encapsulated_pixel_data(const struct _attribute *da) {
  * implementation of is_root.
  */
 // TODO: FAM
+// https://stackoverflow.com/questions/9722632/what-happens-if-i-define-a-0-size-array-in-c-c
 struct array {
   size_t size;
   size_t capacity;
