@@ -42,7 +42,7 @@ struct _item_reader {
   uint32_t value_length_pos;
 
   DICM_CHECK_RETURN int (*fp_next_event)(struct _item_reader *self,
-                                         struct dicm_io *src);
+                                         struct dicm_src *src);
 };
 
 /* group key */

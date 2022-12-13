@@ -18,13 +18,22 @@
 #include <stdint.h>
 
 /* common object private vtable */
+struct object;
 struct object_prv_vtable {
   DICM_CHECK_RETURN
-  int (*fp_destroy)(void *const) DICM_NONNULL;
+  int (*fp_destroy)(struct object *const) DICM_NONNULL;
+};
+
+struct object_vtable {
+  struct object_prv_vtable const obj;
+};
+
+struct object {
+  struct object_vtable const *vtable;
 };
 
 /* common object interface */
-#define object_destroy(t) ((t)->vtable->object.fp_destroy((t)))
+#define object_destroy(t) ((t)->vtable->obj.fp_destroy((t)))
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MAKE_VR(left, right) (right << 8 | left)

@@ -1,6 +1,6 @@
 #include "dicm_item.h"
 
-#include "dicm_io.h"
+#include "dicm_src.h"
 
 #include <assert.h>
 
@@ -53,13 +53,13 @@ static inline bool _attribute_is_valid(const struct _attribute *da) {
 }
 
 static enum dicm_token _item_reader_next_impl(struct _item_reader *self,
-                                              struct dicm_io *src) {
+                                              struct dicm_src *src) {
   union _ude ude;
   _Static_assert(16 == sizeof(ude), "16 bytes");
   _Static_assert(12 == sizeof(struct _ede32), "12 bytes");
   _Static_assert(8 == sizeof(struct _ede16), "8 bytes");
   _Static_assert(8 == sizeof(struct _ide), "8 bytes");
-  int ssize = dicm_io_read(src, ude.bytes, 8);
+  int ssize = dicm_src_read(src, ude.bytes, 8);
   if (ssize != 8) {
     return ssize == 0 ? TOKEN_EOF : TOKEN_INVALID_DATA;
   }
@@ -98,7 +98,7 @@ static enum dicm_token _item_reader_next_impl(struct _item_reader *self,
     if (ude.ede16.vl16 != 0)
       return TOKEN_INVALID_DATA;
 
-    ssize = dicm_io_read(src, &ude.ede32.vl, 4);
+    ssize = dicm_src_read(src, &ude.ede32.vl, 4);
     if (ssize != 4)
       return TOKEN_INVALID_DATA;
 
@@ -128,7 +128,7 @@ _item_reader_next_impl2(struct _item_reader *self) {
   }
 }
 
-int _ds_reader_next_event(struct _item_reader *self, struct dicm_io *src) {
+int _ds_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
@@ -172,7 +172,7 @@ int _ds_reader_next_event(struct _item_reader *self, struct dicm_io *src) {
   return next;
 }
 
-int _item_reader_next_event(struct _item_reader *self, struct dicm_io *src) {
+int _item_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
@@ -247,7 +247,7 @@ _fragments_reader_next_impl2(struct _item_reader *self) {
 }
 
 static enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
-                                                   struct dicm_io *src) {
+                                                   struct dicm_src *src) {
   const enum dicm_token next = _item_reader_next_impl(self, src);
   return next == TOKEN_STARTITEM ? TOKEN_FRAGMENT : next;
 }
@@ -259,7 +259,7 @@ static enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
  * - STATE_ENDSEQUENCE
  */
 int _fragments_reader_next_event(struct _item_reader *self,
-                                 struct dicm_io *src) {
+                                 struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
