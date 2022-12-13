@@ -17,9 +17,11 @@ static void my_log(int log_level, const char *msg) {
   fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
 }
 
-FILE *stream;
+static int my_read(struct dicm_src *const src, void *buf, size_t size);
 
-static int my_read(void *const io, void *buf, size_t size) {
+int my_read(struct dicm_src *const src, void *buf, size_t size) {
+  struct dicm_src_user *self = (struct dicm_src_user *)src;
+  FILE *stream = self->data;
   const size_t read = fread(buf, 1, size, stream);
   const int ret = (int)read;
   return ret;
@@ -27,7 +29,6 @@ static int my_read(void *const io, void *buf, size_t size) {
 
 int main(int argc, char *argv[]) {
   struct dicm_parser *parser;
-  struct dicm_io *io;
   struct dicm_key key;
   int done = 0;
   /* value */
@@ -35,18 +36,19 @@ int main(int argc, char *argv[]) {
   size_t size;
   int res;
   const size_t buflen = sizeof buf;
+  struct dicm_src *src;
+  FILE *stream = NULL;
 
   dicm_configure_log_msg(my_log);
 
-  if (argc < 2)
-    dicm_input_stream_create(&io);
-  else if (argc > 2 || argv[1][0] == '-') {
+  if (argc < 2) {
+    dicm_src_file_create(&src, stdin);
+  } else if (argc > 2 || argv[1][0] == '-') {
     fprintf(stderr, "usage: dummy [filename]\n");
     exit(1);
   } else {
-    // dicm_input_file_create(&io, argv[1]);
     stream = fopen(argv[1], "rb");
-    dicm_create(&io, my_read, NULL, NULL);
+    dicm_src_user_create(&src, stream, my_read, NULL);
   }
 
   if (dicm_parser_create(&parser) < 0) {
@@ -55,7 +57,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_parser_set_input(parser, io);
+  dicm_parser_set_input(parser, src);
 
   /* Read the event sequence. */
   while (!done) {
@@ -97,12 +99,15 @@ int main(int argc, char *argv[]) {
 
   /* Destroy the Parser object. */
   dicm_delete(parser);
-  dicm_delete(io);
-  fclose(stream);
+  if (stream)
+    fclose(stream);
+  dicm_delete(src);
   return 0;
 
 error:
   dicm_delete(parser);
-  dicm_delete(io);
+  if (stream)
+    fclose(stream);
+  dicm_delete(src);
   return 1;
 }

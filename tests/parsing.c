@@ -12,7 +12,7 @@ static const char *events[] = {
 
 int parsing(int argc, char *argv[]) {
   struct dicm_parser *parser;
-  struct dicm_io *io;
+  struct dicm_src *src;
   struct dicm_key key;
   int done = 0;
   /* value */
@@ -20,8 +20,9 @@ int parsing(int argc, char *argv[]) {
   size_t size;
   int res;
   const size_t buflen = sizeof buf;
+  FILE *in = fopen(argv[1], "rb");
 
-  dicm_input_file_create(&io, argv[1]);
+  dicm_src_file_create(&src, in);
   FILE *out = fopen(argv[2], "w");
 
   if (dicm_parser_create(&parser) < 0) {
@@ -30,7 +31,7 @@ int parsing(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_parser_set_input(parser, io);
+  dicm_parser_set_input(parser, src);
 
   /* Read the event sequence. */
   while (!done) {
@@ -75,13 +76,15 @@ int parsing(int argc, char *argv[]) {
 
   /* Destroy the Parser object. */
   dicm_delete(parser);
-  dicm_delete(io);
+  dicm_delete(src);
+  fclose(in);
   fclose(out);
   return EXIT_SUCCESS;
 
 error:
   dicm_delete(parser);
-  dicm_delete(io);
+  dicm_delete(src);
+  fclose(in);
   fclose(out);
   return EXIT_FAILURE;
 }

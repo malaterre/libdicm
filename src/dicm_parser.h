@@ -8,15 +8,16 @@
 
 #include <stddef.h> /* size_t */
 
+struct dicm_parser;
 struct parser_prv_vtable {
   /* kKey */
-  DICM_CHECK_RETURN int (*fp_get_key)(void *const,
+  DICM_CHECK_RETURN int (*fp_get_key)(struct dicm_parser *const,
                                       struct dicm_key *) DICM_NONNULL;
 
   /* kValue: valid for both data element and fragment */
-  DICM_CHECK_RETURN int (*fp_get_value_length)(void *const,
+  DICM_CHECK_RETURN int (*fp_get_value_length)(struct dicm_parser *const,
                                                size_t *) DICM_NONNULL;
-  DICM_CHECK_RETURN int (*fp_read_value)(void *const, void *,
+  DICM_CHECK_RETURN int (*fp_read_value)(struct dicm_parser *const, void *,
                                          size_t) DICM_NONNULL;
 };
 

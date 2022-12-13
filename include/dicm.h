@@ -3,6 +3,7 @@
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
+#include <stdio.h>  /* FILE */
 
 /**
  * @defgroup export Export Definitions
@@ -84,45 +85,66 @@ dicm_configure_log_msg(void (*fp_msg)(int, const char *)) DICM_NONNULL;
  * @defgroup io Input/Output
  * @{
  */
-struct dicm_io;
+// https://stackoverflow.com/questions/415452/object-orientation-in-c
+
+struct dicm_src_vtable;
+struct dicm_src {
+  struct dicm_src_vtable const *vtable;
+};
+
+struct dicm_src_user {
+  struct dicm_src super;
+  /* base members */
+  void *data;
+};
+
+/* stream or file */
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_src_file_create(struct dicm_src **pself, FILE *stream) DICM_NONNULL;
 
 /* buffer */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_input_buffer_create(struct dicm_io **pself, const void *ptr,
-                         size_t len) DICM_NONNULL;
-
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_output_buffer_create(struct dicm_io **pself, void *ptr,
-                          size_t len) DICM_NONNULL;
-
-/* stream */
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_input_stream_create(struct dicm_io **pself) DICM_NONNULL;
-
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_output_stream_create(struct dicm_io **pself) DICM_NONNULL;
-
-/* file */
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_input_file_create(struct dicm_io **pself,
-                       const char *filename) DICM_NONNULL;
-
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_output_file_create(struct dicm_io **pself,
-                        const char *filename) DICM_NONNULL;
+dicm_src_mem_create(struct dicm_src **pself, const void *ptr,
+                    size_t size) DICM_NONNULL;
 
 /* user-defined */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_create(struct dicm_io **pself, int (*fp_read)(void *const, void *, size_t),
-            int (*fp_seek)(void *const, long, int), /* can be null */
-            int (*fp_write)(void *const, const void *, size_t));
+dicm_src_user_create(struct dicm_src **pself, void *data,
+                     int (*fp_read)(struct dicm_src *const, void *, size_t),
+                     int (*fp_seek)(struct dicm_src *const, long, int));
+
+struct dicm_dst {
+  struct dicm_dst_vtable const *vtable;
+};
+
+struct dicm_dst_user {
+  struct dicm_dst super;
+  /* base members */
+  void *data;
+};
+
+/* stream or file */
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_dst_file_create(struct dicm_dst **pself, FILE *stream) DICM_NONNULL;
+
+/* buffer */
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_dst_mem_create(struct dicm_dst **pself, void *ptr,
+                    size_t size) DICM_NONNULL;
+
+/* user-defined */
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_dst_user_create(struct dicm_dst **pself, void *data,
+                     int (*fp_write)(struct dicm_dst *const, const void *,
+                                     size_t),
+                     int (*fp_seek)(struct dicm_dst *const, long, int));
+
 /** @} */
 
 /**
@@ -185,7 +207,7 @@ dicm_parser_create(struct dicm_parser **pself) DICM_NONNULL;
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_parser_set_input(struct dicm_parser *self,
-                      struct dicm_io *io) DICM_NONNULL;
+                      struct dicm_src *src) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
@@ -222,7 +244,7 @@ dicm_emitter_create(struct dicm_emitter **pself) DICM_NONNULL;
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_emitter_set_output(struct dicm_emitter *self,
-                        struct dicm_io *io) DICM_NONNULL;
+                        struct dicm_dst *dst) DICM_NONNULL;
 
 /** @} */
 
