@@ -20,12 +20,12 @@ struct _parser {
 };
 
 static DICM_CHECK_RETURN int _parser_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int _parser_get_key(struct dicm_parser *const,
+static DICM_CHECK_RETURN int _parser_get_key(struct dicm_parser *,
                                              struct dicm_key *) DICM_NONNULL;
-static DICM_CHECK_RETURN int _parser_get_value_length(struct dicm_parser *const,
+static DICM_CHECK_RETURN int _parser_get_value_length(struct dicm_parser *,
                                                       size_t *) DICM_NONNULL;
-static DICM_CHECK_RETURN int _parser_read_value(struct dicm_parser *const,
-                                                void *, size_t) DICM_NONNULL;
+static DICM_CHECK_RETURN int _parser_read_value(struct dicm_parser *, void *,
+                                                size_t) DICM_NONNULL;
 
 static struct parser_vtable const g_vtable = {
     /* object interface */

@@ -6,10 +6,9 @@
 #include <stddef.h> /* size_t */
 
 struct src_prv_vtable {
-  DICM_CHECK_RETURN int (*fp_read)(struct dicm_src *const, void *,
+  DICM_CHECK_RETURN int (*fp_read)(struct dicm_src *, void *,
                                    size_t) DICM_NONNULL;
-  DICM_CHECK_RETURN int (*fp_seek)(struct dicm_src *const, long,
-                                   int) DICM_NONNULL;
+  DICM_CHECK_RETURN int (*fp_seek)(struct dicm_src *, long, int) DICM_NONNULL;
 };
 
 struct dicm_src_vtable {
