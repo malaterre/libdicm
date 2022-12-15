@@ -11,9 +11,9 @@ struct file {
 };
 
 static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_write(struct dicm_dst *const, const void *,
+static DICM_CHECK_RETURN int file_write(struct dicm_dst *, const void *,
                                         size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_seek(struct dicm_dst *const, long,
+static DICM_CHECK_RETURN int file_seek(struct dicm_dst *, long,
                                        int) DICM_NONNULL;
 
 static struct dicm_dst_vtable const g_file_vtable = {

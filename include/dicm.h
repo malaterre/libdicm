@@ -113,8 +113,8 @@ dicm_src_mem_create(struct dicm_src **pself, const void *ptr,
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_src_user_create(struct dicm_src **pself, void *data,
-                     int (*fp_read)(struct dicm_src *const, void *, size_t),
-                     int (*fp_seek)(struct dicm_src *const, long, int));
+                     int (*fp_read)(struct dicm_src *, void *, size_t),
+                     int (*fp_seek)(struct dicm_src *, long, int));
 
 struct dicm_dst {
   struct dicm_dst_vtable const *vtable;
@@ -141,9 +141,8 @@ dicm_dst_mem_create(struct dicm_dst **pself, void *ptr,
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_dst_user_create(struct dicm_dst **pself, void *data,
-                     int (*fp_write)(struct dicm_dst *const, const void *,
-                                     size_t),
-                     int (*fp_seek)(struct dicm_dst *const, long, int));
+                     int (*fp_write)(struct dicm_dst *, const void *, size_t),
+                     int (*fp_seek)(struct dicm_dst *, long, int));
 
 /** @} */
 

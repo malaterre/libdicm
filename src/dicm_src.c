@@ -11,9 +11,9 @@ struct file {
 };
 
 static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_read(struct dicm_src *const, void *,
+static DICM_CHECK_RETURN int file_read(struct dicm_src *, void *,
                                        size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_seek(struct dicm_src *const, long,
+static DICM_CHECK_RETURN int file_seek(struct dicm_src *, long,
                                        int) DICM_NONNULL;
 
 static struct dicm_src_vtable const g_file_vtable = {
@@ -84,9 +84,9 @@ struct mem {
 };
 
 static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_read(struct dicm_src *const, void *,
+static DICM_CHECK_RETURN int mem_read(struct dicm_src *, void *,
                                       size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_seek(struct dicm_src *const, long,
+static DICM_CHECK_RETURN int mem_seek(struct dicm_src *, long,
                                       int) DICM_NONNULL;
 
 static struct dicm_src_vtable const g_mem_vtable = {
@@ -158,8 +158,8 @@ int user_destroy(struct object *obj) {
 }
 
 int dicm_src_user_create(struct dicm_src **pself, void *data,
-                         int (*fp_read)(struct dicm_src *const, void *, size_t),
-                         int (*fp_seek)(struct dicm_src *const, long, int)) {
+                         int (*fp_read)(struct dicm_src *, void *, size_t),
+                         int (*fp_seek)(struct dicm_src *, long, int)) {
   struct dicm_src_user *self = (struct dicm_src_user *)malloc(sizeof(*self));
   if (self) {
     struct dicm_src_vtable *tmp =
