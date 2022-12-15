@@ -17,9 +17,9 @@ static void my_log(int log_level, const char *msg) {
   fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
 }
 
-static int my_read(struct dicm_src *const src, void *buf, size_t size);
+static int64_t my_read(struct dicm_src *src, void *buf, size_t size);
 
-int my_read(struct dicm_src *const src, void *buf, size_t size) {
+int64_t my_read(struct dicm_src *const src, void *buf, size_t size) {
   struct dicm_src_user *self = (struct dicm_src_user *)src;
   FILE *stream = self->data;
   const size_t read = fread(buf, 1, size, stream);
