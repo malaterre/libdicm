@@ -7,6 +7,8 @@
 #include <assert.h> /* assert */
 #include <stdlib.h> /* malloc */
 
+// FIXME I need to define a name without spaces:
+typedef struct _item_reader item_reader_t;
 struct _parser {
   struct dicm_parser parser;
   /* data */
@@ -16,7 +18,7 @@ struct _parser {
   enum dicm_state current_state;
 
   /* item readers */
-  struct array item_readers;
+  array(item_reader_t) * item_readers;
 };
 
 static DICM_CHECK_RETURN int _parser_destroy(struct object *) DICM_NONNULL;
@@ -96,35 +98,34 @@ int dicm_parser_read_value(struct dicm_parser *self, void *ptr, size_t len) {
 
 int _parser_destroy(struct object *const self) {
   struct _parser *parser = (struct _parser *)self;
-  array_free(&parser->item_readers);
+  array_free(parser->item_readers);
   free(parser);
   return 0;
 }
 
 int _parser_get_key(struct dicm_parser *const self, struct dicm_key *key) {
   struct _parser *parser = (struct _parser *)self;
-  struct _item_reader *item_reader = array_back(&parser->item_readers);
+  struct _item_reader *item_reader = &array_back(parser->item_readers);
   key->tag = item_reader->da.tag;
   key->vr = item_reader->da.vr;
   return 0;
 }
 int _parser_get_value_length(struct dicm_parser *const self, size_t *len) {
   struct _parser *parser = (struct _parser *)self;
-  struct _item_reader *item_reader = array_back(&parser->item_readers);
+  struct _item_reader *item_reader = &array_back(parser->item_readers);
   *len = item_reader->da.vl;
   return 0;
 }
 
 static inline bool is_root_dataset(const struct _parser *self) {
-  return self->item_readers.size == 1;
+  return self->item_readers->size == 1;
 }
 
 // get current item reader
 static inline struct _item_reader *
-get_item_reader(struct array *item_readers,
-                const enum dicm_state current_state) {
-  assert(array_back(item_readers)->current_item_state == current_state);
-  return array_back(item_readers);
+get_item_reader(struct _parser *parser, const enum dicm_state current_state) {
+  assert(array_back(parser->item_readers).current_item_state == current_state);
+  return &array_back(parser->item_readers);
 }
 
 int _ds_reader_next_event(struct _item_reader *self, struct dicm_src *src);
@@ -132,33 +133,33 @@ int _item_reader_next_event(struct _item_reader *self, struct dicm_src *src);
 int _fragments_reader_next_event(struct _item_reader *self,
                                  struct dicm_src *src);
 
-static inline void push_item_reader(struct array *item_readers,
+static inline void push_item_reader(struct _parser *parser,
                                     const enum dicm_state current_state) {
   assert(current_state == STATE_STARTSEQUENCE);
-  assert(array_back(item_readers)->current_item_state == current_state);
+  assert(array_back(parser->item_readers).current_item_state == current_state);
 
   struct _item_reader new_item = {.current_item_state = current_state,
                                   .fp_next_event = _item_reader_next_event};
-  array_push_back(item_readers, &new_item);
+  array_push(parser->item_readers, new_item);
 }
 
-static inline void push_fragments_reader(struct array *item_readers,
+static inline void push_fragments_reader(struct _parser *parser,
                                          const enum dicm_state current_state) {
   assert(current_state == STATE_STARTFRAGMENTS);
-  assert(array_back(item_readers)->current_item_state == current_state);
+  assert(array_back(parser->item_readers).current_item_state == current_state);
 
   struct _item_reader new_item = {.current_item_state = current_state,
                                   .fp_next_event =
                                       _fragments_reader_next_event};
-  array_push_back(item_readers, &new_item);
+  array_push(parser->item_readers, new_item);
 }
 
-static inline void pop_item_reader(struct array *item_readers,
+static inline void pop_item_reader(struct _parser *parser,
                                    const enum dicm_state current_state) {
-  assert(array_back(item_readers)->current_item_state == current_state);
+  assert(array_back(parser->item_readers).current_item_state == current_state);
 
-  array_pop_back(item_readers);
-  struct _item_reader *item_reader = array_back(item_readers);
+  (void)array_pop(parser->item_readers);
+  struct _item_reader *item_reader = &array_back(parser->item_readers);
   assert(item_reader->current_item_state == STATE_STARTSEQUENCE ||
          item_reader->current_item_state == STATE_STARTFRAGMENTS);
   item_reader->current_item_state = current_state; // re-initialize
@@ -166,7 +167,7 @@ static inline void pop_item_reader(struct array *item_readers,
 
 int _parser_read_value(struct dicm_parser *const self_, void *b, size_t s) {
   struct _parser *self = (struct _parser *)self_;
-  struct _item_reader *item_reader = array_back(&self->item_readers);
+  struct _item_reader *item_reader = &array_back(self->item_readers);
   const uint32_t value_length = item_reader->da.vl;
   const size_t max_length = s;
   const uint32_t to_read =
@@ -199,22 +200,22 @@ int dicm_parser_next_event(struct dicm_parser *self_) {
   // else get next dicm token:
   switch (current_state) {
   case STATE_STARTSEQUENCE:
-    push_item_reader(&self->item_readers, current_state);
+    push_item_reader(self, current_state);
     break;
   case STATE_STARTFRAGMENTS:
-    push_fragments_reader(&self->item_readers, current_state);
+    push_fragments_reader(self, current_state);
     break;
   case STATE_ENDSEQUENCE:
-    pop_item_reader(&self->item_readers, current_state);
+    pop_item_reader(self, current_state);
     break;
   default:;
   }
-  struct _item_reader *item_reader =
-      get_item_reader(&self->item_readers, current_state);
+  struct _item_reader *item_reader = get_item_reader(self, current_state);
   const enum dicm_token dicm_next =
       item_reader->fp_next_event(item_reader, self->src);
   const enum dicm_event_type next = token2event(dicm_next);
   self->current_state = item_reader->current_item_state;
+
   return next;
 }
 
@@ -225,10 +226,10 @@ int dicm_parser_create(struct dicm_parser **pself) {
     self->parser.vtable = &g_vtable;
 
     self->current_state = STATE_INIT;
-    array_create(&self->item_readers, 1); // TODO: is it a good default ?
-    struct _item_reader *item_reader = array_back(&self->item_readers);
-    item_reader->current_item_state = STATE_STARTDATASET;
-    item_reader->fp_next_event = _ds_reader_next_event;
+    array_new(item_reader_t, self->item_readers);
+    struct _item_reader new_item = {.current_item_state = STATE_STARTDATASET,
+                                    .fp_next_event = _ds_reader_next_event};
+    array_push(self->item_readers, new_item);
 
     return 0;
   }

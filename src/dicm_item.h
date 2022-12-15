@@ -136,55 +136,49 @@ dicm_attribute_is_encapsulated_pixel_data(const struct _attribute *da) {
  * other, and we also get the size property for free which allow an easy
  * implementation of is_root.
  */
-// TODO: FAM
 // https://stackoverflow.com/questions/9722632/what-happens-if-i-define-a-0-size-array-in-c-c
-struct array {
-  size_t size;
-  size_t capacity;
-  struct _item_reader *data;
-};
+// https://en.wikipedia.org/wiki/Flexible_array_member
+// https://tiehu.is/blog/c1
 
-static inline struct array *array_create(struct array *arr, size_t size) {
-  assert(arr);
-  arr->size = size;
-  arr->capacity = size;
-  if (size) {
-    arr->data = malloc(size * sizeof(struct _item_reader));
-  } else {
-    arr->data = NULL;
+#define ARRAY_LEN(a) (sizeof(a) / sizeof(*(a)))
+
+#define array_base                                                             \
+  struct {                                                                     \
+    size_t capacity, size;                                                     \
   }
-  return arr;
-}
 
-static inline void array_free(struct array *arr) { free(arr->data); }
-
-static inline struct _item_reader *array_at(struct array *arr,
-                                            const size_t index) {
-  if (index < arr->size)
-    return &arr->data[index];
-  return NULL;
-}
-
-static inline void array_push_back(struct array *arr,
-                                   struct _item_reader *item_reader) {
-  arr->size++;
-  if (arr->size >= arr->capacity) {
-    arr->capacity = 2 * arr->size;
-    arr->data = realloc(arr->data, arr->capacity * sizeof(struct _item_reader));
-    memcpy(&arr->data[arr->size - 1], item_reader, sizeof(struct _item_reader));
-  } else {
-    memcpy(&arr->data[arr->size - 1], item_reader, sizeof(struct _item_reader));
+#define array(T)                                                               \
+  struct array_##T {                                                           \
+    array_base;                                                                \
+    T data[];                                                                  \
   }
-}
 
-static inline struct _item_reader *array_back(struct array *arr) {
-  struct _item_reader *item_reader = &arr->data[arr->size - 1];
-  return item_reader;
-}
+#define array_new(T, v)                                                        \
+  do {                                                                         \
+    const size_t initial_size = 1;                                             \
+    (v) = malloc(sizeof(array(T)) + sizeof(T) * initial_size);                 \
+    (v)->capacity = initial_size;                                              \
+    (v)->size = 0;                                                             \
+  } while (0)
 
-static inline void array_pop_back(struct array *arr) {
-  assert(arr->size);
-  arr->size--;
-}
+#define array_free(v) free((v))
+
+#define array_ref(v, i) (&(v)->data[i])
+
+#define array_at(v, i) (*(array_ref((v), i)))
+
+#define array_push(v, i)                                                       \
+  do {                                                                         \
+    if ((v)->size >= (v)->capacity) {                                          \
+      (v)->capacity *= 2;                                                      \
+      (v) = realloc((v),                                                       \
+                    sizeof(array_base) + (v)->capacity * sizeof(*(v)->data));  \
+    }                                                                          \
+    (v)->data[(v)->size++] = (i);                                              \
+  } while (0)
+
+#define array_back(v) (*(array_ref((v), (v)->size - 1)))
+
+#define array_pop(v) ((v)->data[--(v)->size])
 
 #endif /* DICM_ITEM_H */
