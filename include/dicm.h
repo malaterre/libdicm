@@ -232,7 +232,7 @@ dicm_parser_get_key(struct dicm_parser *self,
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_parser_get_value_length(struct dicm_parser *self,
-                             size_t *len) DICM_NONNULL;
+                             uint32_t *len) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
@@ -256,6 +256,25 @@ DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_emitter_set_output(struct dicm_emitter *self,
                         struct dicm_dst *dst) DICM_NONNULL;
+
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_emitter_emit(struct dicm_emitter *self, int event_type) DICM_NONNULL;
+
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_emitter_set_key(struct dicm_emitter *self,
+                     const struct dicm_key *key) DICM_NONNULL;
+
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_emitter_set_value_length(struct dicm_emitter *self,
+                              const uint32_t *len) DICM_NONNULL;
+
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_emitter_write_value(struct dicm_emitter *self, const void *buf,
+                         size_t len) DICM_NONNULL;
 
 /** @} */
 

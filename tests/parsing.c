@@ -17,7 +17,7 @@ int parsing(int argc, char *argv[]) {
   int done = 0;
   /* value */
   char buf[4096];
-  size_t size;
+  uint32_t size;
   int res;
   const size_t buflen = sizeof buf;
   FILE *in = fopen(argv[1], "rb");

@@ -1,11 +1,12 @@
 configure_file(dicm_configure.h.in dicm_configure.h @ONLY)
 set(dicm_SOURCES
-    dicm_object.c
-    dicm_src.c
     dicm_dst.c
+    dicm_emitter.c
     dicm_item.c
-    dicm_parser.c
     dicm_log.c
+    dicm_object.c
+    dicm_parser.c
+    dicm_src.c
     dicm_version.c)
 
 add_library(dicm SHARED ${dicm_SOURCES})

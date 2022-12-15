@@ -16,7 +16,7 @@ struct parser_prv_vtable {
 
   /* kValue: valid for both data element and fragment */
   DICM_CHECK_RETURN int (*fp_get_value_length)(struct dicm_parser *,
-                                               size_t *) DICM_NONNULL;
+                                               uint32_t *) DICM_NONNULL;
   DICM_CHECK_RETURN int (*fp_read_value)(struct dicm_parser *, void *,
                                          size_t) DICM_NONNULL;
 };
