@@ -1,3 +1,6 @@
+#define _FILE_OFFSET_BITS 64
+#define _POSIX_C_SOURCE 200112L
+
 #include "dicm_src.h"
 
 #include <stdio.h>  /* FILE */
@@ -11,10 +14,10 @@ struct file {
 };
 
 static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_read(struct dicm_src *, void *,
-                                       size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_seek(struct dicm_src *, long,
-                                       int) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t file_read(struct dicm_src *, void *,
+                                           size_t) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t file_seek(struct dicm_src *, int64_t,
+                                           int) DICM_NONNULL;
 
 static struct dicm_src_vtable const g_file_vtable = {
     .obj = {.fp_destroy = file_destroy},
@@ -30,7 +33,16 @@ int file_destroy(struct object *obj) {
   return 0;
 }
 
-int file_read(struct dicm_src *const src, void *buf, size_t size) {
+// $ man 2 read
+// [...]
+// On Linux, read() (and similar system calls) will transfer at most 0x7ffff000
+// (2,147,479,552) bytes, returning the number of bytes actually transferred.
+// (This is true on both 32-bit and 64-bit systems.)
+
+#define DICM_SIZE_MAX 0x7ffff000
+
+int64_t file_read(struct dicm_src *const src, void *buf, size_t size) {
+  assert(size <= DICM_SIZE_MAX);
   struct file *self = (struct file *)src;
   const size_t read = fread(buf, 1, size, self->stream);
   /* fread() does not distinguish between end-of-file and error, and callers
@@ -42,15 +54,18 @@ int file_read(struct dicm_src *const src, void *buf, size_t size) {
       return -1;
     assert(eof && read == 0);
   }
-  const int ret = (int)read;
+  const int64_t ret = (int64_t)read;
   assert(ret >= 0);
   return ret;
 }
 
-int file_seek(struct dicm_src *const src, long offset, int whence) {
+// man 2 lseek
+int64_t file_seek(struct dicm_src *const src, int64_t offset, int whence) {
   struct file *self = (struct file *)src;
-  const int ret = fseek(self->stream, offset, whence);
-  return ret;
+  const int ret = fseeko(self->stream, offset, whence);
+  if (ret < 0)
+    return ret;
+  return ftello(self->stream);
 }
 
 // https://stackoverflow.com/questions/58670828/is-there-a-way-to-rewind-stdin-in-c
@@ -84,10 +99,10 @@ struct mem {
 };
 
 static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_read(struct dicm_src *, void *,
-                                      size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_seek(struct dicm_src *, long,
-                                      int) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t mem_read(struct dicm_src *, void *,
+                                          size_t) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t mem_seek(struct dicm_src *, int64_t,
+                                          int) DICM_NONNULL;
 
 static struct dicm_src_vtable const g_mem_vtable = {
     .obj = {.fp_destroy = mem_destroy},
@@ -99,20 +114,20 @@ int mem_destroy(struct object *obj) {
   return 0;
 }
 
-int mem_read(struct dicm_src *const src, void *buf, size_t size) {
+int64_t mem_read(struct dicm_src *const src, void *buf, size_t size) {
   struct mem *self = (struct mem *)src;
   const ptrdiff_t diff = self->end - self->cur;
   assert(diff >= 0);
   if ((size_t)diff >= size) {
     memcpy(buf, self->cur, size);
     self->cur += size;
-    return 0;
+    return size;
   }
   self->cur = self->end;
   return -1;
 }
 
-int mem_seek(struct dicm_src *const src, long offset, int whence) {
+int64_t mem_seek(struct dicm_src *const src, int64_t offset, int whence) {
   struct mem *self = (struct mem *)src;
   const void *ptr = NULL;
   // SEEK_SET, SEEK_CUR, or SEEK_END:
@@ -131,7 +146,7 @@ int mem_seek(struct dicm_src *const src, long offset, int whence) {
     return -1;
   }
   self->cur = ptr;
-  return 0;
+  return self->cur - self->beg;
 }
 
 int dicm_src_mem_create(struct dicm_src **pself, const void *ptr, size_t size) {
@@ -158,8 +173,8 @@ int user_destroy(struct object *obj) {
 }
 
 int dicm_src_user_create(struct dicm_src **pself, void *data,
-                         int (*fp_read)(struct dicm_src *, void *, size_t),
-                         int (*fp_seek)(struct dicm_src *, long, int)) {
+                         int64_t (*fp_read)(struct dicm_src *, void *, size_t),
+                         int64_t (*fp_seek)(struct dicm_src *, int64_t, int)) {
   struct dicm_src_user *self = (struct dicm_src_user *)malloc(sizeof(*self));
   if (self) {
     struct dicm_src_vtable *tmp =

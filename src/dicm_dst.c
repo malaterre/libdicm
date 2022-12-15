@@ -1,3 +1,6 @@
+#define _FILE_OFFSET_BITS 64
+#define _POSIX_C_SOURCE 200112L
+
 #include "dicm_dst.h"
 
 #include <stdio.h>  /* FILE */
@@ -11,10 +14,10 @@ struct file {
 };
 
 static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_write(struct dicm_dst *, const void *,
-                                        size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int file_seek(struct dicm_dst *, long,
-                                       int) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t file_write(struct dicm_dst *, const void *,
+                                            size_t) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t file_seek(struct dicm_dst *, int64_t,
+                                           int) DICM_NONNULL;
 
 static struct dicm_dst_vtable const g_file_vtable = {
     .obj = {.fp_destroy = file_destroy},
@@ -30,7 +33,7 @@ int file_destroy(struct object *obj) {
   return 0;
 }
 
-int file_write(struct dicm_dst *const dst, const void *buf, size_t size) {
+int64_t file_write(struct dicm_dst *const dst, const void *buf, size_t size) {
   struct file *self = (struct file *)dst;
   const size_t write = fwrite(buf, 1, size, self->stream);
   if (write != size) {
@@ -40,15 +43,17 @@ int file_write(struct dicm_dst *const dst, const void *buf, size_t size) {
       return -1;
     assert(eof && write == 0);
   }
-  const int ret = (int)write;
+  const int64_t ret = (int64_t)write;
   assert(ret >= 0);
   return ret;
 }
 
-int file_seek(struct dicm_dst *const dst, long offset, int whence) {
+int64_t file_seek(struct dicm_dst *const dst, int64_t offset, int whence) {
   struct file *self = (struct file *)dst;
-  const int ret = fseek(self->stream, offset, whence);
-  return ret;
+  const off_t ret = fseeko(self->stream, offset, whence);
+  if (ret < 0)
+    return ret;
+  return ftello(self->stream);
 }
 
 // https://stackoverflow.com/questions/58670828/is-there-a-way-to-rewind-stdin-in-c
@@ -82,10 +87,10 @@ struct mem {
 };
 
 static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_write(struct dicm_dst *const, const void *,
-                                       size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int mem_seek(struct dicm_dst *const, long,
-                                      int) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t mem_write(struct dicm_dst *const, const void *,
+                                           size_t) DICM_NONNULL;
+static DICM_CHECK_RETURN int64_t mem_seek(struct dicm_dst *const, int64_t,
+                                          int) DICM_NONNULL;
 
 static struct dicm_dst_vtable const g_mem_vtable = {
     .obj = {.fp_destroy = mem_destroy},
@@ -97,20 +102,20 @@ int mem_destroy(struct object *obj) {
   return 0;
 }
 
-int mem_write(struct dicm_dst *const dst, const void *buf, size_t size) {
+int64_t mem_write(struct dicm_dst *const dst, const void *buf, size_t size) {
   struct mem *self = (struct mem *)dst;
   const ptrdiff_t diff = self->end - self->cur;
   assert(diff >= 0);
   if ((size_t)diff >= size) {
     memcpy(self->cur, buf, size);
     self->cur += size;
-    return 0;
+    return size;
   }
   self->cur = self->end;
   return -1;
 }
 
-int mem_seek(struct dicm_dst *const dst, long offset, int whence) {
+int64_t mem_seek(struct dicm_dst *const dst, int64_t offset, int whence) {
   struct mem *self = (struct mem *)dst;
   void *ptr = NULL;
   // SEEK_SET, SEEK_CUR, or SEEK_END:
@@ -129,7 +134,7 @@ int mem_seek(struct dicm_dst *const dst, long offset, int whence) {
     return -1;
   }
   self->cur = ptr;
-  return 0;
+  return self->cur - self->beg;
 }
 
 int dicm_dst_mem_create(struct dicm_dst **pself, void *ptr, size_t size) {
@@ -156,9 +161,10 @@ int user_destroy(struct object *obj) {
 }
 
 int dicm_dst_user_create(struct dicm_dst **pself, void *data,
-                         int (*fp_write)(struct dicm_dst *const, const void *,
-                                         size_t),
-                         int (*fp_seek)(struct dicm_dst *const, long, int)) {
+                         int64_t (*fp_write)(struct dicm_dst *const,
+                                             const void *, size_t),
+                         int64_t (*fp_seek)(struct dicm_dst *const, int64_t,
+                                            int)) {
   struct dicm_dst_user *self = (struct dicm_dst_user *)malloc(sizeof(*self));
   if (self) {
     struct dicm_dst_vtable *tmp =
