@@ -1,2 +1,5 @@
-add_executable(dummy dummy.c)
-target_link_libraries(dummy PRIVATE dicm)
+set(EXAMPLES copy dummy)
+foreach(example ${EXAMPLES})
+  add_executable(${example} ${example}.c)
+  target_link_libraries(${example} PRIVATE dicm)
+endforeach()
