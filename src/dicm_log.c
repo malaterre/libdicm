@@ -19,13 +19,13 @@ static const char *log_level_str[] = {"trace", "debug", "info",
                                       "warn",  "error", "fatal"};
 
 void _default_log_msg(int log_level, const char *msg) {
-  assert(log_level >= LOG_TRACE && log_level <= LOG_FATAL);
+  assert(log_level >= DICM_LOG_TRACE && log_level <= DICM_LOG_FATAL);
   assert(msg);
   assert(strlen(msg) < 512);
   fprintf(stderr, "%s: %s\n", log_level_str[log_level], msg);
 }
 
-void _log_msg(enum log_level_type log_level, const char *fmt, ...) {
+void _log_msg(enum dicm_log_level_type log_level, const char *fmt, ...) {
   char buffer[512];
   va_list ap;
   va_start(ap, fmt);

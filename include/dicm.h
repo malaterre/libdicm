@@ -76,6 +76,16 @@ dicm_delete(void *self) DICM_NONNULL;
  * @defgroup log Logging
  * @{
  */
+
+enum dicm_log_level_type {
+  DICM_LOG_TRACE = 0,
+  DICM_LOG_DEBUG,
+  DICM_LOG_INFO,
+  DICM_LOG_WARN,
+  DICM_LOG_ERROR,
+  DICM_LOG_FATAL
+};
+
 DICM_DECLARE(void)
 dicm_configure_log_msg(void (*fp_msg)(int, const char *)) DICM_NONNULL;
 
@@ -116,6 +126,7 @@ dicm_src_user_create(struct dicm_src **pself, void *data,
                      int64_t (*fp_read)(struct dicm_src *, void *, size_t),
                      int64_t (*fp_seek)(struct dicm_src *, int64_t, int));
 
+struct dicm_dst_vtable;
 struct dicm_dst {
   struct dicm_dst_vtable const *vtable;
 };
