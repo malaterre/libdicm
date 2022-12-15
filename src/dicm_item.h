@@ -45,6 +45,20 @@ struct _item_reader {
                                          struct dicm_src *src);
 };
 
+struct _item_writer {
+  /* the current item state */
+  enum dicm_state current_item_state;
+
+  struct _attribute da;
+
+  /* current pos in value_length */
+  uint32_t value_length_pos;
+
+  DICM_CHECK_RETURN int (*fp_next_token)(struct _item_writer *self,
+                                         struct dicm_dst *dst,
+                                         const enum dicm_event_type next);
+};
+
 /* group key */
 
 typedef uint32_t dicm_tag_t;

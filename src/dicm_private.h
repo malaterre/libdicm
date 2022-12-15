@@ -237,4 +237,74 @@ enum dicm_token {
   TOKEN_INVALID_DATA,
 };
 
+static inline enum dicm_event_type
+token2event(const enum dicm_token dicm_next) {
+  enum dicm_event_type next;
+  switch (dicm_next) {
+  case TOKEN_KEY:
+    next = DICM_ELEMENT_KEY_EVENT;
+    break;
+  case TOKEN_VALUE:
+    next = DICM_ELEMENT_VALUE_EVENT;
+    break;
+  case TOKEN_FRAGMENT:
+    next = DICM_FRAGMENT_EVENT;
+    break;
+  case TOKEN_STARTSEQUENCE:
+  case TOKEN_STARTFRAGMENTS:
+    next = DICM_SEQUENCE_START_EVENT;
+    break;
+  case TOKEN_ENDSQITEM:
+    next = DICM_SEQUENCE_END_EVENT;
+    break;
+  case TOKEN_STARTITEM:
+    next = DICM_ITEM_START_EVENT;
+    break;
+  case TOKEN_ENDITEM:
+    next = DICM_ITEM_END_EVENT;
+    break;
+  case TOKEN_EOF:
+    next = DICM_DATASET_END_EVENT;
+    break;
+  default:
+    assert(0);
+  }
+  return next;
+}
+
+static inline enum dicm_token
+event2token(const enum dicm_event_type event_type) {
+  enum dicm_token token;
+  switch (event_type) {
+  case DICM_ELEMENT_KEY_EVENT:
+    token = TOKEN_KEY;
+    break;
+  case DICM_ELEMENT_VALUE_EVENT:
+    token = TOKEN_VALUE;
+    break;
+  case DICM_FRAGMENT_EVENT:
+    token = TOKEN_FRAGMENT;
+    break;
+  case DICM_SEQUENCE_START_EVENT:
+    // token = TOKEN_STARTFRAGMENTS;
+    token = TOKEN_STARTSEQUENCE;
+    break;
+  case DICM_SEQUENCE_END_EVENT:
+    token = TOKEN_ENDSQITEM;
+    break;
+  case DICM_ITEM_START_EVENT:
+    token = TOKEN_STARTITEM;
+    break;
+  case DICM_ITEM_END_EVENT:
+    token = TOKEN_ENDITEM;
+    break;
+  case DICM_DATASET_END_EVENT:
+    token = TOKEN_EOF;
+    break;
+  default:
+    assert(0);
+  }
+  return token;
+}
+
 #endif /* DICM_PRIVATE_H */
