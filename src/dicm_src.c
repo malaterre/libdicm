@@ -76,8 +76,15 @@ static inline bool is_stream_seekable(FILE *stream) {
   return true;
 }
 
+static inline bool is_stream_valid(FILE *stream) {
+  const int eof = feof(stream);
+  const int err = ferror(stream);
+  return eof == 0 && err == 0;
+}
+
 int dicm_src_file_create(struct dicm_src **pself, FILE *stream) {
   assert(stream);
+  assert(is_stream_valid(stream));
   struct file *self = (struct file *)malloc(sizeof(*self));
   if (self) {
     *pself = &self->super;

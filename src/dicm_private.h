@@ -144,7 +144,7 @@ static inline uint32_t _ide_get_tag(const union _ude *ude) {
     uint16_t a[2];
   } u;
   u.t = ude->ide.tag;
-  return (uint32_t)(u.a[0] << 16u | u.a[1]);
+  return (uint32_t)((uint32_t)u.a[0] << 16u | u.a[1]);
 }
 static inline void _ide_set_tag(union _ude *ude, const uint32_t tag) {
   // byte-swap tag:
@@ -153,7 +153,7 @@ static inline void _ide_set_tag(union _ude *ude, const uint32_t tag) {
     uint16_t a[2];
   } u;
   u.t = tag;
-  ude->ide.tag = (uint32_t)(u.a[0] << 16u | u.a[1]);
+  ude->ide.tag = (uint32_t)((uint32_t)u.a[0] << 16u | u.a[1]);
 }
 
 static inline uint32_t _ide_get_vl(const union _ude *ude) {
