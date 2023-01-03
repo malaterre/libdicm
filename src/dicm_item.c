@@ -131,12 +131,14 @@ _item_reader_next_impl2(struct _item_reader *self) {
   }
 }
 
-int _ds_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
+enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
+                                           struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
-  case STATE_STARTDATASET: // default start-up
-    next = _item_reader_next_impl(self, src);
+  case STATE_STARTDATASET:
+    // see code in STATE_STARTSTREAM:
+    next = TOKEN_KEY;
     assert(next == TOKEN_KEY);
     self->current_item_state = next == TOKEN_KEY ? STATE_KEY : STATE_INVALID;
     break;
@@ -165,14 +167,24 @@ int _ds_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
       self->current_item_state = next == TOKEN_KEY ? STATE_KEY : STATE_INVALID;
     }
     break;
-  case STATE_ENDDATASET:
-    // this is the exit state do not enter
-    assert(0);
-    break;
+  case STATE_ENDDATASET: // exit state
+    self->current_item_state = STATE_ENDSTREAM;
+    return DICM_STREAM_END_EVENT;
+  case STATE_STARTSTREAM: // default start-up
+    // We are reading a full attribute info here, and
+    next = _item_reader_next_impl(self, src);
+    assert(next == TOKEN_KEY || next == TOKEN_EOF);
+    if (next == TOKEN_EOF) {
+      return DICM_STREAM_END_EVENT;
+    }
+    // else
+    self->current_item_state = STATE_STARTDATASET;
+    return DICM_DATASET_START_EVENT;
   default:
     assert(0);
   }
-  return next;
+  const enum dicm_event_type event_next = token2event(next);
+  return event_next;
 }
 
 static int _item_writer_next_token_impl(struct _item_writer *self,
@@ -197,6 +209,7 @@ int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
     assert(token == TOKEN_KEY);
     assert(self->value_length_pos == VL_UNDEFINED);
     ret = _item_writer_next_token_impl(self, dst, token);
+    assert(ret == 0);
     self->current_item_state = STATE_KEY;
     ret = 0;
     break;
@@ -228,6 +241,7 @@ int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
   case STATE_VALUE:
     if (token == TOKEN_KEY) {
       ret = _item_writer_next_token_impl(self, dst, token);
+      assert(ret == 0);
       self->current_item_state = STATE_KEY;
     } else {
       assert(token == TOKEN_EOF);
@@ -238,6 +252,7 @@ int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
   case STATE_ENDSEQUENCE:
     if (token == TOKEN_KEY) {
       ret = _item_writer_next_token_impl(self, dst, token);
+      assert(ret == 0);
       self->current_item_state = STATE_KEY;
       ret = 0;
     } else {
@@ -253,7 +268,8 @@ int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
   return ret;
 }
 
-int _item_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
+enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
+                                             struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
@@ -314,7 +330,8 @@ int _item_reader_next_event(struct _item_reader *self, struct dicm_src *src) {
   default:
     assert(0);
   }
-  return next;
+  const enum dicm_event_type event_next = token2event(next);
+  return event_next;
 }
 
 int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
@@ -324,25 +341,40 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
   int ret = -1;
   switch (current_state) {
   case STATE_STARTSEQUENCE:
-    assert(token == TOKEN_STARTITEM);
-    {
-      union _ude ude;
-      _ide_set_tag(&ude, TAG_STARTITEM);
-      _ide_set_vl(&ude, VL_UNDEFINED);
-      int err = dicm_dst_write(dst, &ude.ide, 8);
-      assert(err == 8);
+    assert(token == TOKEN_STARTITEM || token == TOKEN_ENDSQITEM);
+    if (token == TOKEN_STARTITEM) {
+      {
+        union _ude ude;
+        _ide_set_tag(&ude, TAG_STARTITEM);
+        _ide_set_vl(&ude, VL_UNDEFINED);
+        int err = dicm_dst_write(dst, &ude.ide, 8);
+        assert(err == 8);
+      }
+      self->current_item_state = STATE_STARTITEM;
+      ret = 0;
+    } else {
+      assert(token == TOKEN_ENDSQITEM);
+      {
+        union _ude ude;
+        _ide_set_tag(&ude, TAG_ENDSQITEM);
+        _ide_set_vl(&ude, 0);
+        int err = dicm_dst_write(dst, &ude.ide, 8);
+        assert(err == 8);
+      }
+      self->current_item_state = STATE_ENDSEQUENCE;
+      ret = 0;
     }
-    self->current_item_state = STATE_STARTITEM;
-    ret = 0;
     break;
   case STATE_STARTITEM:
     assert(token == TOKEN_KEY);
     ret = _item_writer_next_token_impl(self, dst, token);
+    assert(ret == 0);
     self->current_item_state = STATE_KEY;
     ret = 0;
     break;
   case STATE_KEY:
-    assert(token == TOKEN_VALUE);
+    assert(token == TOKEN_VALUE || TOKEN_STARTSEQUENCE);
+#if 0
     assert(self->value_length_pos != VL_UNDEFINED);
     assert(self->value_length_pos <= self->da.vl);
     if (self->value_length_pos == self->da.vl)
@@ -350,11 +382,30 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
     else {
       assert(0);
     }
-    ret = 0;
+#endif
+    if (token == TOKEN_VALUE) {
+      self->current_item_state = STATE_VALUE;
+      ret = 0;
+    } else if (token == TOKEN_STARTSEQUENCE) {
+      self->da.vl = VL_UNDEFINED;
+      const bool enc = dicm_attribute_is_encapsulated_pixel_data(&self->da);
+      {
+        union _ude ude;
+        _ede32_set_vl(&ude, VL_UNDEFINED);
+        int err = dicm_dst_write(dst, &ude.ede32.vl, 4);
+        assert(err == 4);
+      }
+      self->current_item_state =
+          enc ? STATE_STARTFRAGMENTS : STATE_STARTSEQUENCE;
+      ret = 0;
+    } else {
+      assert(0);
+    }
     break;
   case STATE_VALUE:
     if (token == TOKEN_KEY) {
       ret = _item_writer_next_token_impl(self, dst, token);
+      assert(ret == 0);
       self->current_item_state = STATE_KEY;
       ret = 0;
     } else {
@@ -394,6 +445,26 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
       ret = 0;
     }
     break;
+  case STATE_ENDSEQUENCE:
+    assert(token == TOKEN_ENDITEM || token == TOKEN_KEY);
+    if (token == TOKEN_ENDITEM) {
+      {
+        union _ude ude;
+        _ide_set_tag(&ude, TAG_ENDITEM);
+        _ide_set_vl(&ude, 0);
+        int err = dicm_dst_write(dst, &ude.ide, 8);
+        assert(err == 8);
+      }
+      self->current_item_state = STATE_ENDITEM;
+      ret = 0;
+    } else {
+      assert(token == TOKEN_KEY);
+      ret = _item_writer_next_token_impl(self, dst, token);
+      assert(ret == 0);
+      self->current_item_state = STATE_KEY;
+      ret = 0;
+    }
+    break;
   default:
     assert(0);
     break;
@@ -422,8 +493,8 @@ static enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
  * and exit in state:
  * - STATE_ENDSEQUENCE
  */
-int _fragments_reader_next_event(struct _item_reader *self,
-                                 struct dicm_src *src) {
+enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
+                                                  struct dicm_src *src) {
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
@@ -460,7 +531,8 @@ int _fragments_reader_next_event(struct _item_reader *self,
   default:
     assert(0);
   }
-  return next;
+  const enum dicm_event_type event_next = token2event(next);
+  return event_next;
 }
 
 int _fragments_writer_next_token(struct _item_writer *self,

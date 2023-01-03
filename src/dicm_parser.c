@@ -38,12 +38,17 @@ static struct parser_vtable const g_vtable = {
                .fp_read_value = _parser_read_value}};
 
 int dicm_parser_set_input(struct dicm_parser *self, struct dicm_src *src) {
+  assert(src);
   struct _parser *parser = (struct _parser *)self;
   parser->src = src;
+  // update state:
+  array_back(parser->item_readers).current_item_state = STATE_INIT;
+  parser->current_state = STATE_INIT;
   return 0;
 }
 
 int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
+  assert(key);
   return dicm_parser_get_key1(self, key);
 }
 
@@ -98,10 +103,12 @@ static inline bool is_root_dataset(const struct _parser *self) {
   return self->item_readers->size == 1;
 }
 
-int _ds_reader_next_event(struct _item_reader *self, struct dicm_src *src);
-int _item_reader_next_event(struct _item_reader *self, struct dicm_src *src);
-int _fragments_reader_next_event(struct _item_reader *self,
-                                 struct dicm_src *src);
+enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
+                                           struct dicm_src *src);
+enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
+                                             struct dicm_src *src);
+enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
+                                                  struct dicm_src *src);
 
 static inline void push_item_reader(struct _parser *parser,
                                     const enum dicm_state current_state) {
@@ -161,24 +168,21 @@ int dicm_parser_next_event(struct dicm_parser *self_) {
   struct _parser *self = (struct _parser *)self_;
   const enum dicm_state current_state = self->current_state;
 
-  // special init case
-  if (current_state == STATE_INIT) {
-    self->current_state = STATE_STARTSTREAM;
-    return DICM_STREAM_START_EVENT;
-  } else if (current_state == STATE_STARTSTREAM) {
-    self->current_state = STATE_STARTDATASET;
-    return DICM_DATASET_START_EVENT;
-  } else if (current_state == STATE_ENDDATASET) {
-    self->current_state = STATE_INVALID;
-    return DICM_STREAM_END_EVENT;
-  }
-  // else get next dicm token:
   struct _item_reader *item_reader = get_item_reader(self, current_state);
-  const enum dicm_token dicm_next =
+  // special init case
+  // TODO: move to external state machine:
+  if (current_state == STATE_INIT) {
+    assert(self->src);
+    item_reader->current_item_state = STATE_STARTSTREAM;
+    self->current_state = item_reader->current_item_state;
+    return DICM_STREAM_START_EVENT;
+  }
+  // else get next dicm event:
+  const enum dicm_event_type next =
       item_reader->fp_next_event(item_reader, self->src);
-  const enum dicm_event_type next = token2event(dicm_next);
   self->current_state = item_reader->current_item_state;
 
+  // change item_reader based on state:
   switch (self->current_state) {
   case STATE_STARTSEQUENCE:
     push_item_reader(self, self->current_state);
@@ -201,9 +205,9 @@ int dicm_parser_create(struct dicm_parser **pself) {
     *pself = &self->parser;
     self->parser.vtable = &g_vtable;
 
-    self->current_state = STATE_INIT;
+    self->current_state = STATE_INVALID;
     array_new(item_reader_t, self->item_readers);
-    struct _item_reader new_item = {.current_item_state = STATE_STARTDATASET,
+    struct _item_reader new_item = {.current_item_state = STATE_INVALID,
                                     .fp_next_event = _ds_reader_next_event};
     array_push(self->item_readers, new_item);
 

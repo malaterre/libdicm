@@ -41,8 +41,8 @@ struct _item_reader {
   /* current pos in value_length */
   uint32_t value_length_pos;
 
-  DICM_CHECK_RETURN int (*fp_next_event)(struct _item_reader *self,
-                                         struct dicm_src *src);
+  DICM_CHECK_RETURN enum dicm_event_type (*fp_next_event)(
+      struct _item_reader *self, struct dicm_src *src);
 };
 
 struct _item_writer {
