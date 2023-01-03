@@ -8,7 +8,7 @@ target_link_libraries(dicmtest PRIVATE dicm)
 set(TS te
        # tb ti
 )
-set(CASES simple)
+set(CASES simple empty)
 
 foreach(case ${CASES})
   foreach(ts ${TS})

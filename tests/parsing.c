@@ -10,6 +10,39 @@ static const char *events[] = {
     "item-end",     "sequence-start", "sequence-end",
 };
 
+static struct log_count {
+  unsigned int trace;
+  unsigned int debug;
+  unsigned int info;
+  unsigned int warn;
+  unsigned int error;
+  unsigned int fatal;
+} log_count;
+
+static void my_log(int log_level, const char *msg) {
+  //  fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
+  switch (log_level) {
+  case DICM_LOG_TRACE:
+    log_count.trace++;
+    break;
+  case DICM_LOG_DEBUG:
+    log_count.debug++;
+    break;
+  case DICM_LOG_INFO:
+    log_count.info++;
+    break;
+  case DICM_LOG_WARN:
+    log_count.warn++;
+    break;
+  case DICM_LOG_ERROR:
+    log_count.error++;
+    break;
+  case DICM_LOG_FATAL:
+    log_count.fatal++;
+    break;
+  }
+}
+
 int parsing(int argc, char *argv[]) {
   struct dicm_parser *parser;
   struct dicm_src *src;
@@ -21,6 +54,8 @@ int parsing(int argc, char *argv[]) {
   int res;
   const size_t buflen = sizeof buf;
   FILE *in = fopen(argv[1], "rb");
+
+  dicm_configure_log_msg(my_log);
 
   dicm_src_file_create(&src, in);
   FILE *out = fopen(argv[2], "w");
@@ -67,6 +102,7 @@ int parsing(int argc, char *argv[]) {
       } while (size != 0);
       fprintf(out, " %.*s", (int)len, buf);
       break;
+    default:;
     }
 
     /* Are we finished? */
@@ -79,6 +115,9 @@ int parsing(int argc, char *argv[]) {
   dicm_delete(src);
   fclose(in);
   fclose(out);
+  if (log_count.error != 0) {
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 
 error:
