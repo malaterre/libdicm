@@ -35,9 +35,9 @@ struct emitter_prv_vtable {
       DICM_NONNULL;
 
   /* We need a start model to implement easy conversion to XML */
-  DICM_CHECK_RETURN int (*fp_write_start_dataset)(struct dicm_emitter *,
-                                                  const char *) DICM_NONNULL;
-  DICM_CHECK_RETURN int (*fp_write_end_dataset)(struct dicm_emitter *)
+  DICM_CHECK_RETURN int (*fp_write_start_document)(struct dicm_emitter *,
+                                                   const char *) DICM_NONNULL;
+  DICM_CHECK_RETURN int (*fp_write_end_document)(struct dicm_emitter *)
       DICM_NONNULL;
 };
 

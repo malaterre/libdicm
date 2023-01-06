@@ -83,13 +83,13 @@ int main(int argc, char *argv[]) {
 
     /* Process the events */
     switch (etype) {
-    case DICM_ELEMENT_KEY_EVENT:
+    case DICM_KEY_EVENT:
       res = dicm_parser_get_key(parser, &key);
       assert(res == 0);
       res = dicm_emitter_set_key(emitter, &key);
       assert(res == 0);
       break;
-    case DICM_ELEMENT_VALUE_EVENT:
+    case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
       assert(res == 0);
       res = dicm_emitter_set_value_length(emitter, &size);

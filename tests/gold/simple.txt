@@ -1,6 +1,6 @@
 stream-start
-dataset-start
-element-key 00080005
-element-value ISO_IR 100
-dataset-end
+document-start
+key 00080005 CS
+value ISO_IR 100
+document-end
 stream-end
