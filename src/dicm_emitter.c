@@ -2,7 +2,9 @@
 
 #include "dicm_dst.h"
 #include "dicm_item.h"
+#include "dicm_private.h"
 
+#include <assert.h> /* assert */
 #include <stdlib.h> /* malloc */
 
 // FIXME I need to define a name without spaces:
@@ -11,9 +13,6 @@ struct _emitter {
   struct dicm_emitter emitter;
   /* data */
   struct dicm_dst *dst;
-
-  /* the current state */
-  enum dicm_state current_state;
 
   /* item writers */
   array(item_writer_t) * item_writers;
@@ -29,15 +28,19 @@ static struct emitter_vtable const g_vtable = {
                 .fp_write_value_length = NULL,
                 .fp_write_value = NULL}};
 
+static inline enum dicm_state get_current_state(struct _emitter *emitter) {
+  return array_back(emitter->item_writers).current_item_state;
+}
+
 int dicm_emitter_set_output(struct dicm_emitter *self, struct dicm_dst *dst) {
   struct _emitter *emitter = (struct _emitter *)self;
   emitter->dst = dst;
+  // update ready state:
+  array_back(emitter->item_writers).current_item_state = STATE_INIT;
   return 0;
 }
 
-static inline struct _item_writer *
-get_item_writer(struct _emitter *emitter, const enum dicm_state current_state) {
-  assert(array_back(emitter->item_writers).current_item_state == current_state);
+static inline struct _item_writer *get_item_writer(struct _emitter *emitter) {
   return &array_back(emitter->item_writers);
 }
 
@@ -81,40 +84,31 @@ static inline void pop_item_writer(struct _emitter *emitter,
   item_writer->current_item_state = current_state; // re-initialize
 }
 
-static int dicm_emitter_emit_next(struct _emitter *self,
+static int dicm_emitter_emit_next(struct _emitter *emitter,
                                   const enum dicm_event_type next) {
-  const enum dicm_state current_state = self->current_state;
-
+  struct _item_writer *item_writer = get_item_writer(emitter);
   // special init case
-  if (current_state == STATE_INIT) {
+  if (get_current_state(emitter) == STATE_INIT) {
+    assert(emitter->dst);
     assert(next == DICM_STREAM_START_EVENT);
-    self->current_state = STATE_STARTSTREAM;
+    item_writer->current_item_state = STATE_STARTSTREAM;
     return next == DICM_STREAM_START_EVENT ? 0 : -1;
-  } else if (current_state == STATE_STARTSTREAM) {
-    assert(next == DICM_DATASET_START_EVENT);
-    self->current_state = STATE_STARTDATASET;
-    return next == DICM_DATASET_START_EVENT ? 0 : -1;
-  } else if (current_state == STATE_ENDDATASET) {
-    assert(next == DICM_STREAM_END_EVENT);
-    self->current_state = STATE_INVALID;
-    return 0;
   }
 
   // else get next dicm token:
-  struct _item_writer *item_writer = get_item_writer(self, current_state);
-  const int ret = item_writer->fp_next_token(item_writer, self->dst, next);
+  const int ret = item_writer->fp_next_token(item_writer, emitter->dst, next);
   assert(ret >= 0);
-  self->current_state = item_writer->current_item_state;
+  // at this point item_writer->current_item_state has been updated
 
-  switch (self->current_state) {
+  switch (get_current_state(emitter)) {
   case STATE_STARTSEQUENCE:
-    push_item_writer(self, self->current_state);
+    push_item_writer(emitter, get_current_state(emitter));
     break;
   case STATE_STARTFRAGMENTS:
-    push_fragments_writer(self, self->current_state);
+    push_fragments_writer(emitter, get_current_state(emitter));
     break;
   case STATE_ENDSEQUENCE:
-    pop_item_writer(self, self->current_state);
+    pop_item_writer(emitter, get_current_state(emitter));
     break;
   default:;
   }
@@ -122,23 +116,23 @@ static int dicm_emitter_emit_next(struct _emitter *self,
   return ret;
 }
 
-int dicm_emitter_emit(struct dicm_emitter *self_, const int event_type) {
+int dicm_emitter_emit(struct dicm_emitter *self, const int event_type) {
   assert(event_type >= 0);
-  struct _emitter *self = (struct _emitter *)self_;
+  struct _emitter *emitter = (struct _emitter *)self;
   const enum dicm_event_type next = event_type;
-  return dicm_emitter_emit_next(self, next);
+  return dicm_emitter_emit_next(emitter, next);
 }
 
 int dicm_emitter_set_key(struct dicm_emitter *self_,
                          const struct dicm_key *key) {
-  struct _emitter *self = (struct _emitter *)self_;
-  const enum dicm_state current_state = self->current_state;
-  assert(current_state == STATE_STARTDATASET || current_state == STATE_VALUE ||
+  struct _emitter *emitter = (struct _emitter *)self_;
+  const enum dicm_state current_state = get_current_state(emitter);
+  assert(current_state == STATE_STARTDOCUMENT || current_state == STATE_VALUE ||
          current_state == STATE_STARTITEM ||
          current_state == STATE_ENDSEQUENCE);
 
-  struct _item_writer *item_writer = get_item_writer(self, current_state);
-  const enum dicm_event_type next = DICM_ELEMENT_KEY_EVENT;
+  struct _item_writer *item_writer = get_item_writer(emitter);
+  const enum dicm_event_type next = DICM_KEY_EVENT;
   const enum dicm_token token = event2token(next);
   assert(token == TOKEN_KEY);
   struct _attribute *da = &item_writer->da;
@@ -151,11 +145,11 @@ int dicm_emitter_set_key(struct dicm_emitter *self_,
 
 int dicm_emitter_set_value_length(struct dicm_emitter *self_,
                                   const uint32_t *len) {
-  struct _emitter *self = (struct _emitter *)self_;
-  const enum dicm_state current_state = self->current_state;
+  struct _emitter *emitter = (struct _emitter *)self_;
+  const enum dicm_state current_state = get_current_state(emitter);
   assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
 
-  struct _item_writer *item_writer = get_item_writer(self, current_state);
+  struct _item_writer *item_writer = get_item_writer(emitter);
   struct _attribute *da = &item_writer->da;
   da->vl = *len;
   item_writer->value_length_pos = VL_UNDEFINED;
@@ -165,15 +159,15 @@ int dicm_emitter_set_value_length(struct dicm_emitter *self_,
 
 int dicm_emitter_write_value(struct dicm_emitter *self_, const void *ptr,
                              size_t len) {
-  struct _emitter *self = (struct _emitter *)self_;
-  const enum dicm_state current_state = self->current_state;
-  struct _item_writer *item_writer = get_item_writer(self, current_state);
+  struct _emitter *emitter = (struct _emitter *)self_;
+  const enum dicm_state current_state = get_current_state(emitter);
+  struct _item_writer *item_writer = get_item_writer(emitter);
   assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
 
   const uint32_t value_length = item_writer->da.vl;
   assert(len <= value_length);
   const uint32_t to_write = len;
-  struct dicm_dst *dst = self->dst;
+  struct dicm_dst *dst = emitter->dst;
   // Write VL
   if (item_writer->value_length_pos == VL_UNDEFINED) {
     union _ude ude;
@@ -217,9 +211,8 @@ int dicm_emitter_create(struct dicm_emitter **pself) {
     *pself = &self->emitter;
     self->emitter.vtable = &g_vtable;
 
-    self->current_state = STATE_INIT;
     array_new(item_writer_t, self->item_writers);
-    struct _item_writer new_item = {.current_item_state = STATE_STARTDATASET,
+    struct _item_writer new_item = {.current_item_state = STATE_INVALID,
                                     .value_length_pos = VL_UNDEFINED,
                                     .fp_next_token = _ds_writer_next_token};
     array_push(self->item_writers, new_item);

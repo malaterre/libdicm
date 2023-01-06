@@ -1,5 +1,5 @@
 # tests
-set(TEST_SRCS parsing.c)
+set(TEST_SRCS emitting.c parsing.c)
 
 create_test_sourcelist(dicmtest dicmtest.c ${TEST_SRCS})
 add_executable(dicmtest ${dicmtest})
@@ -8,24 +8,28 @@ target_link_libraries(dicmtest PRIVATE dicm)
 set(TS te
        # tb ti
 )
-set(CASES simple empty)
+set(CASES empty simple)
 
 foreach(case ${CASES})
   foreach(ts ${TS})
-    foreach(name ${TEST_SRCS})
-      get_filename_component(testname ${name} NAME_WE)
-      add_test(
-        NAME ${testname}_${case}_${ts}
-        COMMAND
-          dicmtest ${testname}
-          ${CMAKE_CURRENT_SOURCE_DIR}/cases/${ts}/${case}.dcm
-          ${CMAKE_CURRENT_BINARY_DIR}/${testname}_${case}${ts}.txt)
-      add_test(
-        NAME ${testname}_${case}_${ts}_cmp
-        COMMAND
-          ${CMAKE_COMMAND} -E compare_files
-          ${CMAKE_CURRENT_SOURCE_DIR}/gold/${case}.txt
-          ${CMAKE_CURRENT_BINARY_DIR}/${testname}_${case}${ts}.txt)
-    endforeach()
+    # emit
+    add_test(
+      NAME emitting_${case}_${ts}
+      COMMAND
+        dicmtest emitting ${ts} ${CMAKE_CURRENT_SOURCE_DIR}/gold/${case}.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/emitting_${case}_${ts}.dcm)
+    # parse
+    add_test(
+      NAME parsing_${case}_${ts}
+      COMMAND
+        dicmtest parsing ${CMAKE_CURRENT_BINARY_DIR}/emitting_${case}_${ts}.dcm
+        ${CMAKE_CURRENT_BINARY_DIR}/parsing_${case}_${ts}.txt)
+    # cmp
+    add_test(
+      NAME cmp_${case}_${ts}
+      COMMAND
+        ${CMAKE_COMMAND} -E compare_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/gold/${case}.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/parsing_${case}_${ts}.txt)
   endforeach()
 endforeach()

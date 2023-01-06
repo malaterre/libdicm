@@ -5,10 +5,9 @@
 #include <stdlib.h> /* EXIT_SUCCESS */
 
 static const char *events[] = {
-    "stream-start", "stream-end",     "dataset-start", "dataset-end",
-    "element-key",  "fragment",       "element-value", "item-start",
-    "item-end",     "sequence-start", "sequence-end",
-};
+    "stream-start", "stream-end",     "document-start", "document-end",
+    "key",          "fragment",       "value",          "item-start",
+    "item-end",     "sequence-start", "sequence-end"};
 
 static struct log_count {
   unsigned int trace;
@@ -20,7 +19,7 @@ static struct log_count {
 } log_count;
 
 static void my_log(int log_level, const char *msg) {
-  //  fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
+  // fprintf(stderr, "LOG: %d - %s\n", log_level, msg);
   switch (log_level) {
   case DICM_LOG_TRACE:
     log_count.trace++;
@@ -79,17 +78,17 @@ int parsing(int argc, char *argv[]) {
     fprintf(out, "%s", events[etype]);
 
     /*
-      ...
-      Process the event.
-      ...
+    ...
+    Process the event.
+    ...
     */
     switch (etype) {
-    case DICM_ELEMENT_KEY_EVENT:
+    case DICM_KEY_EVENT:
       res = dicm_parser_get_key(parser, &key);
       assert(res == 0);
-      fprintf(out, " %08x", key.tag);
+      fprintf(out, " %08x %s", key.tag, &key.vr);
       break;
-    case DICM_ELEMENT_VALUE_EVENT:
+    case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
       assert(res == 0);
       /* do/while loop trigger at least one event (even in the case where

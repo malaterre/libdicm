@@ -197,9 +197,9 @@ enum dicm_state {
   /* stream */
   STATE_STARTSTREAM,
   STATE_ENDSTREAM,
-  /* dataset */
-  STATE_STARTDATASET,
-  STATE_ENDDATASET,
+  /* document */
+  STATE_STARTDOCUMENT,
+  STATE_ENDDOCUMENT,
   /* key */
   STATE_KEY,
   /* fragment */
@@ -243,10 +243,10 @@ token2event(const enum dicm_token dicm_next) {
   enum dicm_event_type next;
   switch (dicm_next) {
   case TOKEN_KEY:
-    next = DICM_ELEMENT_KEY_EVENT;
+    next = DICM_KEY_EVENT;
     break;
   case TOKEN_VALUE:
-    next = DICM_ELEMENT_VALUE_EVENT;
+    next = DICM_VALUE_EVENT;
     break;
   case TOKEN_FRAGMENT:
     next = DICM_FRAGMENT_EVENT;
@@ -265,7 +265,7 @@ token2event(const enum dicm_token dicm_next) {
     next = DICM_ITEM_END_EVENT;
     break;
   case TOKEN_EOF:
-    next = DICM_DATASET_END_EVENT;
+    next = DICM_DOCUMENT_END_EVENT;
     break;
   default:
     assert(0);
@@ -277,10 +277,10 @@ static inline enum dicm_token
 event2token(const enum dicm_event_type event_type) {
   enum dicm_token token;
   switch (event_type) {
-  case DICM_ELEMENT_KEY_EVENT:
+  case DICM_KEY_EVENT:
     token = TOKEN_KEY;
     break;
-  case DICM_ELEMENT_VALUE_EVENT:
+  case DICM_VALUE_EVENT:
     token = TOKEN_VALUE;
     break;
   case DICM_FRAGMENT_EVENT:
@@ -299,7 +299,7 @@ event2token(const enum dicm_event_type event_type) {
   case DICM_ITEM_END_EVENT:
     token = TOKEN_ENDITEM;
     break;
-  case DICM_DATASET_END_EVENT:
+  case DICM_DOCUMENT_END_EVENT:
     token = TOKEN_EOF;
     break;
   default:

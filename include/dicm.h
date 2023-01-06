@@ -171,17 +171,17 @@ enum dicm_event_type {
   /** A STREAM-END event. */
   DICM_STREAM_END_EVENT,
 
-  /** A DATASET-START event. */
-  DICM_DATASET_START_EVENT,
-  /** A DATASET-END event. */
-  DICM_DATASET_END_EVENT,
+  /** A DOCUMENT-START event. */
+  DICM_DOCUMENT_START_EVENT,
+  /** A DOCUMENT-END event. */
+  DICM_DOCUMENT_END_EVENT,
 
-  /** A ELEMENT-KEY event. */
-  DICM_ELEMENT_KEY_EVENT,
+  /** A KEY event. */
+  DICM_KEY_EVENT,
   /** A FRAGMENT event. */
   DICM_FRAGMENT_EVENT,
-  /** A ELEMENT-VALUE event (valid for both element key or fragment). */
-  DICM_ELEMENT_VALUE_EVENT,
+  /** A VALUE event (valid for both element and fragment). */
+  DICM_VALUE_EVENT,
 
   /** A ITEM-START event. */
   DICM_ITEM_START_EVENT,
