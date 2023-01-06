@@ -192,6 +192,7 @@ static inline void _ede32_set_vl(union _ude *ude, const uint32_t vl) {
 
 enum dicm_state {
   STATE_INVALID = -1,
+  /* ready state (after invalid) */
   STATE_INIT = 0,
   /* stream */
   STATE_STARTSTREAM,
