@@ -49,7 +49,7 @@ int parsing(int argc, char *argv[]) {
   int done = 0;
   /* value */
   char buf[4096];
-  uint32_t size;
+  uint32_t size, oldsize;
   int res;
   const size_t buflen = sizeof buf;
   FILE *in = fopen(argv[1], "rb");
@@ -90,16 +90,17 @@ int parsing(int argc, char *argv[]) {
       break;
     case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
+      oldsize = size;
       assert(res == 0);
       /* do/while loop trigger at least one event (even in the case where
        * value_length is exactly 0) */
-      const size_t len = size < buflen ? size : buflen;
       do {
+        const size_t len = size < buflen ? size : buflen;
         res = dicm_parser_read_value(parser, buf, len);
         assert(res == 0);
         size -= len;
       } while (size != 0);
-      fprintf(out, " %.*s", (int)len, buf);
+      fprintf(out, " %.*s", (int)oldsize, buf);
       break;
     default:;
     }
@@ -107,6 +108,7 @@ int parsing(int argc, char *argv[]) {
     /* Are we finished? */
     done = (etype == DICM_STREAM_END_EVENT);
     fprintf(out, "\n");
+    fflush(out);
   }
 
   /* Destroy the Parser object. */

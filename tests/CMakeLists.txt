@@ -8,7 +8,8 @@ target_link_libraries(dicmtest PRIVATE dicm)
 set(TS te
        # tb ti
 )
-set(CASES empty simple)
+set(CASES empty simple simple_sqi simple_sqf simple_nested_sqi
+          simple_sqi_two_items)
 
 foreach(case ${CASES})
   foreach(ts ${TS})
