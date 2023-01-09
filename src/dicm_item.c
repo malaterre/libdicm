@@ -208,7 +208,8 @@ int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
     return 0;
   }
   if (next == DICM_STREAM_END_EVENT) {
-    assert(current_state == STATE_ENDDOCUMENT || next == STATE_STARTSTREAM);
+    assert(current_state == STATE_ENDDOCUMENT ||
+           current_state == STATE_STARTSTREAM);
     self->current_item_state = STATE_INVALID;
     return 0;
   }
