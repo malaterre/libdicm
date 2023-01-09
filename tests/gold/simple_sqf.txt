@@ -1,8 +1,11 @@
 stream-start
 document-start
-key 00080005 CS
-value ISO_IR 100
 key 7fe00010 OB
+sequence-start
+fragment
+value 0123456789
+fragment
 value ABCDEFGHIJKLMNOP
+sequence-end
 document-end
 stream-end
