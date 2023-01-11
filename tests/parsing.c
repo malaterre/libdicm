@@ -108,6 +108,7 @@ int parsing(int argc, char *argv[]) {
     /* Are we finished? */
     done = (etype == DICM_STREAM_END_EVENT);
     fprintf(out, "\n");
+    // not a benchmark tool:
     fflush(out);
   }
 

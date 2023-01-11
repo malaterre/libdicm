@@ -71,8 +71,12 @@ int emitting(int argc, char *argv[]) {
       break;
     case DICM_VALUE_EVENT:
       res = sscanf(line, "%*s %[^\n]s", buf);
-      assert(res == 1);
-      size = strlen(buf);
+      assert(res == 1 || res == -1);
+      if (res == 1) {
+        size = strlen(buf);
+      } else {
+        size = 0;
+      }
       res = dicm_emitter_set_value_length(emitter, &size);
       assert(res == 0);
       res = dicm_emitter_write_value(emitter, buf, size);
