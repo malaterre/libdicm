@@ -1,0 +1,11 @@
+stream-start
+document-start
+key 7fe00010 OB
+sequence-start
+fragment
+value 
+fragment
+value 0123456789
+sequence-end
+document-end
+stream-end

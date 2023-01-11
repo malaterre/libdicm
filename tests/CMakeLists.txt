@@ -15,7 +15,10 @@ set(CASES
     empty
     simple
     simple_sqi
+    simple_empty_sqi
+    simple_sqi_empty_item
     simple_sqf
+    simple_sqf_empty_frag
     simple_nested_sqi
     simple_nested_sqf
     simple_sqi_two_items)

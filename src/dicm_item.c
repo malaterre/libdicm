@@ -377,11 +377,23 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
     }
     break;
   case STATE_STARTITEM:
-    assert(token == TOKEN_KEY);
-    ret = _item_writer_next_token_impl(self, dst, token);
-    assert(ret == 0);
-    self->current_item_state = STATE_KEY;
-    ret = 0;
+    assert(token == TOKEN_KEY || token == TOKEN_ENDITEM);
+    if (token == TOKEN_KEY) {
+      ret = _item_writer_next_token_impl(self, dst, token);
+      assert(ret == 0);
+      self->current_item_state = STATE_KEY;
+      ret = 0;
+    } else {
+      {
+        union _ude ude;
+        _ide_set_tag(&ude, TAG_ENDITEM);
+        _ide_set_vl(&ude, 0);
+        int err = dicm_dst_write(dst, &ude.ide, 8);
+        assert(err == 8);
+      }
+      self->current_item_state = STATE_ENDITEM;
+      ret = 0;
+    }
     break;
   case STATE_KEY:
     assert(token == TOKEN_VALUE || TOKEN_STARTSEQUENCE);
@@ -414,13 +426,13 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
     }
     break;
   case STATE_VALUE:
+    assert(token == TOKEN_KEY || token == TOKEN_ENDITEM);
     if (token == TOKEN_KEY) {
       ret = _item_writer_next_token_impl(self, dst, token);
       assert(ret == 0);
       self->current_item_state = STATE_KEY;
       ret = 0;
     } else {
-      assert(token == TOKEN_ENDITEM);
       {
         union _ude ude;
         _ide_set_tag(&ude, TAG_ENDITEM);
