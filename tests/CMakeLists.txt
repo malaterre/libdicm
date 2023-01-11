@@ -11,8 +11,14 @@ add_test(NAME version COMMAND dicmtest version)
 set(TS te
        # tb ti
 )
-set(CASES empty simple simple_sqi simple_sqf simple_nested_sqi
-          simple_sqi_two_items)
+set(CASES
+    empty
+    simple
+    simple_sqi
+    simple_sqf
+    simple_nested_sqi
+    simple_nested_sqf
+    simple_sqi_two_items)
 
 foreach(case ${CASES})
   foreach(ts ${TS})
