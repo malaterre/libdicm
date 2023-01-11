@@ -25,6 +25,8 @@ foreach(case ${CASES})
       COMMAND
         dicmtest parsing ${CMAKE_CURRENT_BINARY_DIR}/emitting_${case}_${ts}.dcm
         ${CMAKE_CURRENT_BINARY_DIR}/parsing_${case}_${ts}.txt)
+    set_tests_properties(parsing_${case}_${ts}
+                         PROPERTIES DEPENDS emitting_${case}_${ts})
     # cmp
     add_test(
       NAME cmp_${case}_${ts}
@@ -32,5 +34,7 @@ foreach(case ${CASES})
         ${CMAKE_COMMAND} -E compare_files
         ${CMAKE_CURRENT_SOURCE_DIR}/gold/${case}.txt
         ${CMAKE_CURRENT_BINARY_DIR}/parsing_${case}_${ts}.txt)
+    set_tests_properties(cmp_${case}_${ts} PROPERTIES DEPENDS
+                                                      parsing_${case}_${ts})
   endforeach()
 endforeach()
