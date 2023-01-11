@@ -1,9 +1,12 @@
 # tests
-set(TEST_SRCS emitting.c parsing.c)
+set(TEST_SRCS emitting.c parsing.c version.c)
 
 create_test_sourcelist(dicmtest dicmtest.c ${TEST_SRCS})
 add_executable(dicmtest ${dicmtest})
 target_link_libraries(dicmtest PRIVATE dicm)
+
+# simple tests:
+add_test(NAME version COMMAND dicmtest version)
 
 set(TS te
        # tb ti
