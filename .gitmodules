@@ -1,0 +1,3 @@
+[submodule "tests/testdata"]
+	path = tests/testdata
+	url = git@github.com:malaterre/libdicm-testdata.git
