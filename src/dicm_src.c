@@ -52,7 +52,6 @@ int64_t file_read(struct dicm_src *const src, void *buf, size_t size) {
     const int error = ferror(self->stream);
     if (error)
       return -1;
-    assert(eof && read == 0);
   }
   const int64_t ret = (int64_t)read;
   assert(ret >= 0);

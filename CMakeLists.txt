@@ -29,4 +29,10 @@ add_subdirectory(examples)
 enable_testing()
 # retrieve valgrind:
 include(CTest)
+# testdata:
+find_path(
+  DICM_TEST_DATA_ROOT "truncated/single_byte.dcm"
+  PATHS ${CMAKE_CURRENT_SOURCE_DIR}/tests/testdata
+  NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+mark_as_advanced(DICM_TEST_DATA_ROOT)
 add_subdirectory(tests)
