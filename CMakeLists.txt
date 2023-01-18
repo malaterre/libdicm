@@ -8,6 +8,8 @@ project(
 
 set(DICM_SOVERSION "${DICM_VERSION_MAJOR}")
 
+option(DICM_BUILD_EXAMPLES "Build DICM examples directory" OFF)
+
 # only export limited set of symbols
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -23,7 +25,9 @@ include(GNUInstallDirs)
 
 add_subdirectory(include)
 add_subdirectory(src)
-add_subdirectory(examples)
+if(DICM_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # need to be at top-level
 enable_testing()
@@ -35,4 +39,6 @@ find_path(
   PATHS ${CMAKE_CURRENT_SOURCE_DIR}/tests/testdata
   NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
 mark_as_advanced(DICM_TEST_DATA_ROOT)
-add_subdirectory(tests)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
