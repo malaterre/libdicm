@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: checkout source
         uses: actions/checkout@v3
+        with:
+          submodules: true
       - name: setup gcov flags
         run: |
           echo "CFLAGS=-fprofile-arcs -ftest-coverage" >> "$GITHUB_ENV"
