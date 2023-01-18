@@ -86,7 +86,7 @@ int parsing(int argc, char *argv[]) {
       res = dicm_parser_get_key(parser, &key);
       assert(res == 0);
       fprintf(out, "%s", events[etype]);
-      fprintf(out, " %08x %s", key.tag, &key.vr);
+      fprintf(out, " %08x %s", key.tag, (char *)&key.vr);
       break;
     case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
