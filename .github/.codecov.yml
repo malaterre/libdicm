@@ -1,0 +1,4 @@
+# https://docs.codecov.com/docs/codecov-yaml#repository-yaml
+# https://docs.codecov.com/docs/ignoring-paths#ignoring-a-specific-folder
+ignore:
+  - "examples"  # ignore folders and all its contents
