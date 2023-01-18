@@ -75,7 +75,6 @@ int parsing(int argc, char *argv[]) {
     }
     /* Get the next event. */
     enum dicm_event_type etype = next;
-    fprintf(out, "%s", events[etype]);
 
     /*
     ...
@@ -86,6 +85,7 @@ int parsing(int argc, char *argv[]) {
     case DICM_KEY_EVENT:
       res = dicm_parser_get_key(parser, &key);
       assert(res == 0);
+      fprintf(out, "%s", events[etype]);
       fprintf(out, " %08x %s", key.tag, &key.vr);
       break;
     case DICM_VALUE_EVENT:
@@ -97,12 +97,17 @@ int parsing(int argc, char *argv[]) {
       do {
         const size_t len = size < buflen ? size : buflen;
         res = dicm_parser_read_value(parser, buf, len);
-        assert(res == 0);
+        if (res != 0) {
+          goto error;
+        }
         size -= len;
       } while (size != 0);
+      fprintf(out, "%s", events[etype]);
       fprintf(out, " %.*s", (int)oldsize, buf);
       break;
-    default:;
+    default:
+      fprintf(out, "%s", events[etype]);
+      ;
     }
 
     /* Are we finished? */

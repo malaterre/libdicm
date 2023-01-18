@@ -173,8 +173,13 @@ enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
   case STATE_STARTSTREAM: // default start-up
     // We are reading a full attribute info here, and
     next = _item_reader_next_impl(self, src);
+    if (next == TOKEN_INVALID_DATA) {
+      self->current_item_state = STATE_INVALID;
+      return -1;
+    }
     assert(next == TOKEN_KEY || next == TOKEN_EOF);
     if (next == TOKEN_EOF) {
+      self->current_item_state = STATE_INVALID;
       return DICM_STREAM_END_EVENT;
     }
     // else

@@ -138,7 +138,9 @@ int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
 
   struct dicm_src *src = parser->src;
   int err = dicm_src_read(src, b, to_read);
-  assert(err == to_read);
+  if (err != to_read) {
+    return -1;
+  }
   item_reader->value_length_pos += to_read;
   assert(item_reader->value_length_pos <= item_reader->da.vl);
 
