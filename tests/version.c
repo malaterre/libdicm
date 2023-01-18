@@ -1,5 +1,7 @@
 #include "dicm.h"
 #include <stdlib.h> /* EXIT_SUCCESS */
+#include <string.h> /* strcmp */
+
 int version(int argc, char *argv[]) {
   const char *vers = dicm_get_version_string();
   if (!vers) {
