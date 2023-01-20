@@ -167,7 +167,6 @@ static inline uint32_t _ede16_get_vr(const union _ude *ude) {
   return ude->ede16.vr16;
 }
 static inline void _ede16_set_vr(union _ude *ude, const uint32_t vr) {
-  assert(vr < 0x5A5A);
   ude->ede16.vr16 = (uint16_t)vr;
 }
 static inline void _ede32_set_vr(union _ude *ude, const uint32_t vr) {
@@ -192,8 +191,15 @@ static inline void _ede32_set_vl(union _ude *ude, const uint32_t vl) {
 
 enum dicm_state {
   STATE_INVALID = -1,
-  /* ready state (after invalid) */
+/* ready state (after invalid) */
+#if 0
   STATE_INIT = 0,
+#else
+  STATE_INIT_E = 0,
+  STATE_INIT_I,
+  STATE_INIT_L,
+  STATE_INIT_B,
+#endif
   /* stream */
   STATE_STARTSTREAM,
   STATE_ENDSTREAM,
@@ -263,9 +269,6 @@ token2event(const enum dicm_token dicm_next) {
     break;
   case TOKEN_ENDITEM:
     next = DICM_ITEM_END_EVENT;
-    break;
-  case TOKEN_EOF:
-    next = DICM_DOCUMENT_END_EVENT;
     break;
   default:
     assert(0);

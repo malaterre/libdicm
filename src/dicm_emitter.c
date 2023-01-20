@@ -32,16 +32,38 @@ static inline enum dicm_state get_current_state(struct _emitter *emitter) {
   return array_back(emitter->item_writers).current_item_state;
 }
 
-int dicm_emitter_set_output(struct dicm_emitter *self, struct dicm_dst *dst) {
-  struct _emitter *emitter = (struct _emitter *)self;
-  emitter->dst = dst;
-  // update ready state:
-  array_back(emitter->item_writers).current_item_state = STATE_INIT;
-  return 0;
-}
-
 static inline struct _item_writer *get_item_writer(struct _emitter *emitter) {
   return &array_back(emitter->item_writers);
+}
+
+int dicm_emitter_set_output(struct dicm_emitter *self, int structure_type,
+                            struct dicm_dst *dst) {
+  struct _emitter *emitter = (struct _emitter *)self;
+  const enum dicm_structure_type estype = structure_type;
+  // update ready state:
+  struct _item_writer *item_writer = get_item_writer(emitter);
+  emitter->dst = dst;
+  int ret = 0;
+  switch (estype) {
+  case DICM_STRUCTURE_ENCAPSULATED:
+    item_writer->current_item_state = STATE_INIT_E;
+    break;
+  case DICM_STRUCTURE_EXPLICIT_LE:
+    item_writer->current_item_state = STATE_INIT_L;
+    break;
+  case DICM_STRUCTURE_EXPLICIT_BE:
+    item_writer->current_item_state = STATE_INIT_B;
+    break;
+  case DICM_STRUCTURE_IMPLICT:
+    item_writer->current_item_state = STATE_INIT_I;
+    break;
+  default:
+    item_writer->current_item_state = STATE_INVALID;
+    emitter->dst = NULL;
+    ret = -1;
+    break;
+  }
+  return ret;
 }
 
 int _ds_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
@@ -88,7 +110,7 @@ static int dicm_emitter_emit_next(struct _emitter *emitter,
                                   const enum dicm_event_type next) {
   struct _item_writer *item_writer = get_item_writer(emitter);
   // special init case
-  if (get_current_state(emitter) == STATE_INIT) {
+  if (get_current_state(emitter) == STATE_INIT_E) {
     assert(emitter->dst);
     assert(next == DICM_STREAM_START_EVENT);
     item_writer->current_item_state = STATE_STARTSTREAM;

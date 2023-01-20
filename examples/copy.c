@@ -69,8 +69,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_parser_set_input(parser, src);
-  dicm_emitter_set_output(emitter, dst);
+  dicm_parser_set_input(parser, DICM_STRUCTURE_ENCAPSULATED, src);
+  dicm_emitter_set_output(emitter, DICM_STRUCTURE_ENCAPSULATED, dst);
 
   /* Read the event sequence. */
   while (!done) {

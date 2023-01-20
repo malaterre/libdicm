@@ -65,7 +65,7 @@ int parsing(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_parser_set_input(parser, src);
+  dicm_parser_set_input(parser, DICM_STRUCTURE_ENCAPSULATED, src);
 
   /* Read the event sequence. */
   while (!done) {
