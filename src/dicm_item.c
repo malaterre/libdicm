@@ -53,8 +53,12 @@ static inline bool _attribute_is_valid(const struct _attribute *da) {
   return true;
 }
 
-static enum dicm_token _item_reader_next_impl(struct _item_reader *self,
-                                              struct dicm_src *src) {
+#define item_reader_key_token(t, src)                                          \
+  ((t)->vtable->reader.fp_key_token((t), (src)))
+#define item_reader_value_token(t) ((t)->vtable->reader.fp_value_token((t)))
+
+enum dicm_token _item_reader_next_impl(struct _item_reader *self,
+                                       struct dicm_src *src) {
   union _ude ude;
   _Static_assert(16 == sizeof(ude), "16 bytes");
   _Static_assert(12 == sizeof(struct _ede32), "12 bytes");
@@ -116,8 +120,7 @@ static enum dicm_token _item_reader_next_impl(struct _item_reader *self,
   return TOKEN_KEY;
 }
 
-static inline enum dicm_token
-_item_reader_next_impl2(struct _item_reader *self) {
+enum dicm_token _item_reader_next_impl2(struct _item_reader *self) {
   const dicm_vr_t vr = self->da.vr;
   if (dicm_attribute_is_encapsulated_pixel_data(&self->da)) {
     return TOKEN_STARTFRAGMENTS;
@@ -136,14 +139,34 @@ enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
   const enum dicm_state current_state = self->current_item_state;
   enum dicm_token next;
   switch (current_state) {
-  case STATE_STARTDOCUMENT:
-    // see code in STATE_STARTSTREAM:
-    next = TOKEN_KEY;
+  case STATE_STARTSTREAM:
+    next = item_reader_key_token(self, src);
+    if (next == TOKEN_INVALID_DATA) {
+      self->current_item_state = STATE_INVALID;
+      return -1;
+    }
+    if (next == TOKEN_EOF) {
+      self->current_item_state = STATE_ENDSTREAM;
+      return DICM_STREAM_END_EVENT;
+    }
     assert(next == TOKEN_KEY);
+    self->current_item_state = STATE_STARTDOCUMENT;
+    return DICM_DOCUMENT_START_EVENT;
+  case STATE_STARTDOCUMENT:
+#if 0
+    next = item_reader_key_token(self, src);
+    if (next == TOKEN_INVALID_DATA) {
+      self->current_item_state = STATE_INVALID;
+      return -1;
+    }
+    assert(next == TOKEN_KEY);
+#else
+    next = TOKEN_KEY;
+#endif
     self->current_item_state = next == TOKEN_KEY ? STATE_KEY : STATE_INVALID;
     break;
   case STATE_KEY:
-    next = _item_reader_next_impl2(self);
+    next = item_reader_value_token(self);
     assert(next == TOKEN_VALUE || next == TOKEN_STARTSEQUENCE ||
            next == TOKEN_STARTFRAGMENTS);
     self->current_item_state =
@@ -154,37 +177,19 @@ enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
                    : (next == TOKEN_STARTFRAGMENTS ? STATE_STARTFRAGMENTS
                                                    : STATE_INVALID));
     break;
-  case STATE_ENDSEQUENCE: // re-enter case
   case STATE_VALUE:
     // TODO: check user has consumed everything
-    assert(dicm_vl_is_undefined(self->da.vl) ||
-           self->da.vl == self->value_length_pos);
-    next = _item_reader_next_impl(self, src);
+    assert(self->da.vl == self->value_length_pos);
+  case STATE_ENDSEQUENCE: // re-enter case
+    next = item_reader_key_token(self, src);
     if (next == TOKEN_EOF) {
       self->current_item_state = STATE_ENDDOCUMENT;
+      return DICM_DOCUMENT_END_EVENT;
     } else {
       assert(next == TOKEN_KEY);
       self->current_item_state = next == TOKEN_KEY ? STATE_KEY : STATE_INVALID;
     }
     break;
-  case STATE_ENDDOCUMENT: // exit state
-    self->current_item_state = STATE_ENDSTREAM;
-    return DICM_STREAM_END_EVENT;
-  case STATE_STARTSTREAM: // default start-up
-    // We are reading a full attribute info here, and
-    next = _item_reader_next_impl(self, src);
-    if (next == TOKEN_INVALID_DATA) {
-      self->current_item_state = STATE_INVALID;
-      return -1;
-    }
-    assert(next == TOKEN_KEY || next == TOKEN_EOF);
-    if (next == TOKEN_EOF) {
-      self->current_item_state = STATE_INVALID;
-      return DICM_STREAM_END_EVENT;
-    }
-    // else
-    self->current_item_state = STATE_STARTDOCUMENT;
-    return DICM_DOCUMENT_START_EVENT;
   default:
     assert(0);
   }
@@ -290,23 +295,16 @@ enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
   enum dicm_token next;
   switch (current_state) {
   case STATE_STARTSEQUENCE: // default enter
-    next = _item_reader_next_impl(self, src);
+  case STATE_ENDITEM:
+    next = item_reader_key_token(self, src);
     assert(next == TOKEN_STARTITEM || next == TOKEN_ENDSQITEM);
     self->current_item_state =
         next == TOKEN_STARTITEM
             ? STATE_STARTITEM
             : (next == TOKEN_ENDSQITEM ? STATE_ENDSEQUENCE : STATE_INVALID);
     break;
-  case STATE_STARTITEM:
-    next = _item_reader_next_impl(self, src);
-    assert(next == TOKEN_KEY || next == TOKEN_ENDITEM);
-    self->current_item_state =
-        next == TOKEN_KEY
-            ? STATE_KEY
-            : (next == TOKEN_ENDITEM ? STATE_ENDITEM : STATE_INVALID);
-    break;
   case STATE_KEY:
-    next = _item_reader_next_impl2(self);
+    next = item_reader_value_token(self);
     assert(next == TOKEN_VALUE || next == TOKEN_STARTSEQUENCE ||
            next == TOKEN_STARTFRAGMENTS);
     self->current_item_state =
@@ -320,23 +318,9 @@ enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
   case STATE_VALUE:
     // TODO: check user has consumed everything
     assert(self->da.vl == self->value_length_pos);
-    next = _item_reader_next_impl(self, src);
-    assert(next == TOKEN_KEY || next == TOKEN_ENDITEM);
-    self->current_item_state =
-        next == TOKEN_KEY
-            ? STATE_KEY
-            : (next == TOKEN_ENDITEM ? STATE_ENDITEM : STATE_INVALID);
-    break;
-  case STATE_ENDITEM:
-    next = _item_reader_next_impl(self, src);
-    assert(next == TOKEN_STARTITEM || next == TOKEN_ENDSQITEM);
-    self->current_item_state =
-        next == TOKEN_STARTITEM
-            ? STATE_STARTITEM
-            : (next == TOKEN_ENDSQITEM ? STATE_ENDSEQUENCE : STATE_INVALID);
-    break;
   case STATE_ENDSEQUENCE: // re-enter case
-    next = _item_reader_next_impl(self, src);
+  case STATE_STARTITEM:
+    next = item_reader_key_token(self, src);
     assert(next == TOKEN_KEY || next == TOKEN_ENDITEM);
     self->current_item_state =
         next == TOKEN_KEY
@@ -500,8 +484,7 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
   return ret;
 }
 
-static inline enum dicm_token
-_fragments_reader_next_impl2(struct _item_reader *self) {
+enum dicm_token _fragments_reader_next_impl2(struct _item_reader *self) {
   const dicm_vr_t vr = self->da.vr;
   assert(vr == VR_NONE);
   self->value_length_pos = 0;
@@ -509,8 +492,8 @@ _fragments_reader_next_impl2(struct _item_reader *self) {
   return TOKEN_VALUE;
 }
 
-static enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
-                                                   struct dicm_src *src) {
+enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
+                                            struct dicm_src *src) {
   const enum dicm_token next = _item_reader_next_impl(self, src);
   return next == TOKEN_STARTITEM ? TOKEN_FRAGMENT : next;
 }
@@ -527,7 +510,7 @@ enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
   enum dicm_token next;
   switch (current_state) {
   case STATE_STARTFRAGMENTS:
-    next = _fragments_reader_next_impl(self, src);
+    next = item_reader_key_token(self, src);
     // FIXME: technically TOKEN_ENDSQITEM is impossible right here, this would
     // mean a duplicate Pixel Data was sent in the dataset.
     assert(next == TOKEN_FRAGMENT || next == TOKEN_ENDSQITEM);
@@ -537,7 +520,7 @@ enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
             : (next == TOKEN_ENDSQITEM ? STATE_ENDSEQUENCE : STATE_INVALID);
     break;
   case STATE_FRAGMENT:
-    next = _fragments_reader_next_impl2(self);
+    next = item_reader_value_token(self);
     assert(next == TOKEN_VALUE);
     self->current_item_state =
         next == TOKEN_VALUE ? STATE_VALUE : STATE_INVALID;
@@ -545,7 +528,7 @@ enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
   case STATE_VALUE:
     // TODO: check user has consumed everything
     assert(self->da.vl == self->value_length_pos);
-    next = _fragments_reader_next_impl(self, src);
+    next = item_reader_key_token(self, src);
     assert(next == TOKEN_FRAGMENT || next == TOKEN_ENDSQITEM);
     self->current_item_state =
         next == TOKEN_FRAGMENT

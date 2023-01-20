@@ -196,6 +196,18 @@ enum dicm_event_type {
 
 struct dicm_parser;
 
+/** Structure types. */
+enum dicm_structure_type {
+  /** Explicit Little Endian / Encapsulated Pixel Data */
+  DICM_STRUCTURE_ENCAPSULATED = 0, /* E */
+  /** Implicit */
+  DICM_STRUCTURE_IMPLICT, /* I */
+  /** Explicit Little Endian */
+  DICM_STRUCTURE_EXPLICIT_LE, /* L */
+  /** Explicit Big Endian */
+  DICM_STRUCTURE_EXPLICIT_BE, /* B */
+};
+
 struct dicm_key {
   uint32_t tag;
   uint32_t vr;
@@ -217,7 +229,7 @@ dicm_parser_create(struct dicm_parser **pself) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_set_input(struct dicm_parser *self,
+dicm_parser_set_input(struct dicm_parser *self, int structure_type,
                       struct dicm_src *src) DICM_NONNULL;
 
 DICM_CHECK_RETURN
@@ -254,7 +266,7 @@ dicm_emitter_create(struct dicm_emitter **pself) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_set_output(struct dicm_emitter *self,
+dicm_emitter_set_output(struct dicm_emitter *self, int structure_type,
                         struct dicm_dst *dst) DICM_NONNULL;
 
 DICM_CHECK_RETURN

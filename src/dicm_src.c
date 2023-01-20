@@ -33,11 +33,12 @@ int file_destroy(struct object *obj) {
   return 0;
 }
 
-// $ man 2 read
-// [...]
-// On Linux, read() (and similar system calls) will transfer at most 0x7ffff000
-// (2,147,479,552) bytes, returning the number of bytes actually transferred.
-// (This is true on both 32-bit and 64-bit systems.)
+/* $ man 2 read
+ * [...]
+ * On Linux, read() (and similar system calls) will transfer at most 0x7ffff000
+ * (2,147,479,552) bytes, returning the number of bytes actually transferred.
+ * (This is true on both 32-bit and 64-bit systems.)
+ */
 
 #define DICM_SIZE_MAX 0x7ffff000
 
@@ -48,7 +49,6 @@ int64_t file_read(struct dicm_src *const src, void *buf, size_t size) {
   /* fread() does not distinguish between end-of-file and error, and callers
    * must use feof(3) and ferror(3) to determine which occurred. */
   if (read != size) {
-    const int eof = feof(self->stream);
     const int error = ferror(self->stream);
     if (error)
       return -1;
@@ -58,7 +58,7 @@ int64_t file_read(struct dicm_src *const src, void *buf, size_t size) {
   return ret;
 }
 
-// man 2 lseek
+/* $ man 2 lseek */
 int64_t file_seek(struct dicm_src *const src, int64_t offset, int whence) {
   struct file *self = (struct file *)src;
   const int ret = fseeko(self->stream, offset, whence);
@@ -67,7 +67,20 @@ int64_t file_seek(struct dicm_src *const src, int64_t offset, int whence) {
   return ftello(self->stream);
 }
 
-// https://stackoverflow.com/questions/58670828/is-there-a-way-to-rewind-stdin-in-c
+#if 0
+/* https://stackoverflow.com/questions/2082743/c-equivalent-to-fstreams-peek */
+static inline int fpeek(FILE *stream) {
+  int c;
+
+  c = fgetc(stream);
+  ungetc(c, stream);
+
+  return c;
+}
+#endif
+
+/* https://stackoverflow.com/questions/58670828/is-there-a-way-to-rewind-stdin-in-c
+ */
 static inline bool is_stream_seekable(FILE *stream) {
   if (fseek(stream, 0L, SEEK_SET)) {
     return false;
@@ -186,11 +199,13 @@ int dicm_src_user_create(struct dicm_src **pself, void *data,
     struct dicm_src_vtable *tmp =
         (struct dicm_src_vtable *)malloc(sizeof(*tmp));
     if (tmp) {
-      struct dicm_src_vtable const obj = {
-          /* obj interface */
-          .obj = {.fp_destroy = user_destroy},
-          /* src interface */
-          .src = {.fp_read = fp_read, .fp_seek = fp_seek}};
+      struct dicm_src_vtable const obj = {/* obj interface */
+                                          .obj = {.fp_destroy = user_destroy},
+                                          /* src interface */
+                                          .src = {
+                                              .fp_read = fp_read,
+                                              .fp_seek = fp_seek,
+                                          }};
       memcpy(tmp, &obj, sizeof(obj));
       *pself = &self->super;
       self->super.vtable = tmp;

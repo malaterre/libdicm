@@ -51,7 +51,7 @@ int emitting(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_emitter_set_output(emitter, dst);
+  dicm_emitter_set_output(emitter, DICM_STRUCTURE_ENCAPSULATED, dst);
 
   char *line;
   uint32_t tag;

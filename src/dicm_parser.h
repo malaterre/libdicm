@@ -3,7 +3,6 @@
 
 #include "dicm.h"
 
-#include "dicm_item.h"
 #include "dicm_private.h"
 
 #include <stddef.h> /* size_t */

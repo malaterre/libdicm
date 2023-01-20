@@ -6,7 +6,6 @@
 #include "dicm_private.h"
 
 #include <stdint.h>
-#include <stdlib.h> /* malloc */
 #include <string.h>
 
 struct _attribute {
@@ -16,6 +15,10 @@ struct _attribute {
   uint32_t vr;
   /* the current vl */
   uint32_t vl;
+#if 0
+  /* TODO: alignement */
+  uint32_t reserved;
+#endif
 };
 
 static inline bool _ude_init(union _ude *ude, const struct _attribute *da) {
@@ -32,6 +35,21 @@ static inline bool _ude_init(union _ude *ude, const struct _attribute *da) {
   return is_vr16;
 }
 
+struct _item_reader;
+struct _item_reader_prv_vtable {
+  /* before reading key */
+  DICM_CHECK_RETURN enum dicm_token (*fp_key_token)(struct _item_reader *self,
+                                                    struct dicm_src *src);
+  /* before reading value (after key) */
+  DICM_CHECK_RETURN enum dicm_token (*fp_value_token)(
+      struct _item_reader *self);
+
+  DICM_CHECK_RETURN enum dicm_event_type (*fp_next_event)(
+      struct _item_reader *self, struct dicm_src *src);
+};
+struct _item_reader_vtable {
+  struct _item_reader_prv_vtable const reader;
+};
 struct _item_reader {
   /* the current item state */
   enum dicm_state current_item_state;
@@ -41,8 +59,7 @@ struct _item_reader {
   /* current pos in value_length */
   uint32_t value_length_pos;
 
-  DICM_CHECK_RETURN enum dicm_event_type (*fp_next_event)(
-      struct _item_reader *self, struct dicm_src *src);
+  struct _item_reader_vtable const *vtable;
 };
 
 struct _item_writer {
@@ -59,12 +76,8 @@ struct _item_writer {
                                          const enum dicm_event_type next);
 };
 
-/* group key */
-
-typedef uint32_t dicm_tag_t;
-typedef uint32_t dicm_vr_t;
-
 /* tag */
+typedef uint32_t dicm_tag_t;
 
 /* Retrieve the group part from a tag */
 static inline uint_fast16_t dicm_tag_get_group(const dicm_tag_t tag) {
@@ -114,6 +127,7 @@ static inline bool dicm_tag_is_group_length(const dicm_tag_t tag) {
 }
 
 /* vr */
+typedef uint32_t dicm_vr_t;
 
 /* Convert the integer VR representation into a c-string (ASCII) NULL terminated
  */
@@ -124,7 +138,10 @@ bool dicm_vr_is_16(dicm_vr_t vr);
 /* vl */
 typedef uint32_t dicm_vl_t;
 
+/* Special Value Length */
 enum VALUE_LENGTHS { VL_UNDEFINED = 0xffffffff };
+
+static inline bool dicm_vl_is_even(const dicm_vl_t vl) { return vl % 2 == 0; }
 
 static inline bool dicm_vl_is_undefined(const dicm_vl_t vl) {
   return vl == VL_UNDEFINED;
@@ -148,7 +165,8 @@ dicm_attribute_is_encapsulated_pixel_data(const struct _attribute *da) {
  * technically we could have used a single linked list since we only really
  * need push/pop but array have the extra properly of being close to each
  * other, and we also get the size property for free which allow an easy
- * implementation of is_root.
+ * implementation of is_root. Pay attention that JPEG TS is special since only
+ * the root Pixel Data must be undefined length
  */
 // https://stackoverflow.com/questions/9722632/what-happens-if-i-define-a-0-size-array-in-c-c
 // https://en.wikipedia.org/wiki/Flexible_array_member
