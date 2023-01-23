@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);
       assert(res == 0);
-      res = dicm_emitter_set_value_length(emitter, &size);
+      res = dicm_emitter_set_value_length(emitter, size);
       assert(res == 0);
       /* do/while loop trigger at least one event (even in the case where
        * value_length is exactly 0) */
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     }
 
     res = dicm_emitter_emit(emitter, etype);
-    assert(res == 0);
+    assert(res >= 0);
 
     /* Are we finished? */
     done = (etype == DICM_STREAM_END_EVENT);

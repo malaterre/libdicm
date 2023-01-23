@@ -191,15 +191,8 @@ static inline void _ede32_set_vl(union _ude *ude, const uint32_t vl) {
 
 enum dicm_state {
   STATE_INVALID = -1,
-/* ready state (after invalid) */
-#if 0
+  /* ready state (after invalid) */
   STATE_INIT = 0,
-#else
-  STATE_INIT_E = 0,
-  STATE_INIT_I,
-  STATE_INIT_L,
-  STATE_INIT_B,
-#endif
   /* stream */
   STATE_STARTSTREAM,
   STATE_ENDSTREAM,
@@ -243,6 +236,49 @@ enum dicm_token {
   /* invalid token */
   TOKEN_INVALID_DATA,
 };
+
+static inline enum dicm_event_type
+state2event(const enum dicm_state new_state) {
+  enum dicm_event_type next;
+  switch (new_state) {
+  case STATE_KEY:
+    next = DICM_KEY_EVENT;
+    break;
+  case STATE_VALUE:
+    next = DICM_VALUE_EVENT;
+    break;
+  case STATE_STARTSEQUENCE:
+    next = DICM_SEQUENCE_START_EVENT;
+    break;
+  case STATE_ENDSEQUENCE:
+    next = DICM_SEQUENCE_END_EVENT;
+    break;
+  case STATE_STARTFRAGMENTS:
+    next = DICM_SEQUENCE_START_EVENT;
+    break;
+  case STATE_FRAGMENT:
+    next = DICM_FRAGMENT_EVENT;
+    break;
+  case STATE_STARTITEM:
+    next = DICM_ITEM_START_EVENT;
+    break;
+  case STATE_ENDITEM:
+    next = DICM_ITEM_END_EVENT;
+    break;
+  case STATE_STARTDOCUMENT:
+    next = DICM_DOCUMENT_START_EVENT;
+    break;
+  case STATE_ENDDOCUMENT:
+    next = DICM_DOCUMENT_END_EVENT;
+    break;
+  case STATE_ENDSTREAM:
+    next = DICM_STREAM_END_EVENT;
+    break;
+  default:
+    assert(0);
+  }
+  return next;
+}
 
 static inline enum dicm_event_type
 token2event(const enum dicm_token dicm_next) {
@@ -302,9 +338,11 @@ event2token(const enum dicm_event_type event_type) {
   case DICM_ITEM_END_EVENT:
     token = TOKEN_ENDITEM;
     break;
+#if 1
   case DICM_DOCUMENT_END_EVENT:
     token = TOKEN_EOF;
     break;
+#endif
   default:
     assert(0);
   }

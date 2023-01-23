@@ -8,6 +8,7 @@
 struct dicm_emitter;
 
 struct emitter_prv_vtable {
+#if 0
   /* kKey */
   DICM_CHECK_RETURN int (*fp_write_key)(struct dicm_emitter *,
                                         const struct dicm_key *) DICM_NONNULL;
@@ -39,6 +40,7 @@ struct emitter_prv_vtable {
                                                    const char *) DICM_NONNULL;
   DICM_CHECK_RETURN int (*fp_write_end_document)(struct dicm_emitter *)
       DICM_NONNULL;
+#endif
 };
 
 /* common emitter vtable */

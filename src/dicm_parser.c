@@ -13,6 +13,9 @@ struct _parser {
   /* data */
   struct dicm_src *src;
 
+  /* the current item state */
+  enum dicm_state current_item_state;
+
   /* current pos in value_length */
   uint32_t value_length_pos;
 
@@ -31,48 +34,24 @@ static DICM_CHECK_RETURN int _parser_read_value(struct dicm_parser *, void *,
 static struct parser_vtable const g_vtable = {
     /* object interface */
     .object = {.fp_destroy = _parser_destroy},
-    /* parser interface */
+/* parser interface */
+#if 1
     .parser = {.fp_get_key = _parser_get_key,
                .fp_get_value_length = _parser_get_value_length,
-               .fp_read_value = _parser_read_value}};
+               .fp_read_value = _parser_read_value}
+#endif
+};
 
-static inline enum dicm_state get_current_state(struct _parser *parser) {
-  return array_back(parser->item_readers).current_item_state;
-}
-
-// get current item reader
 static inline struct _item_reader *get_item_reader(struct _parser *parser) {
   return &array_back(parser->item_readers);
 }
 
-int dicm_parser_set_input(struct dicm_parser *self, int structure_type,
-                          struct dicm_src *src) {
-  struct _parser *parser = (struct _parser *)self;
-  const enum dicm_structure_type estype = structure_type;
-  // update ready state:
-  struct _item_reader *item_reader = get_item_reader(parser);
-  parser->src = src;
-  int ret = 0;
-  switch (estype) {
-  case DICM_STRUCTURE_ENCAPSULATED:
-    item_reader->current_item_state = STATE_INIT_E;
-    break;
-  case DICM_STRUCTURE_EXPLICIT_LE:
-    item_reader->current_item_state = STATE_INIT_L;
-    break;
-  case DICM_STRUCTURE_EXPLICIT_BE:
-    item_reader->current_item_state = STATE_INIT_B;
-    break;
-  case DICM_STRUCTURE_IMPLICT:
-    item_reader->current_item_state = STATE_INIT_I;
-    break;
-  default:
-    item_reader->current_item_state = STATE_INVALID;
-    parser->src = NULL;
-    ret = -1;
-    break;
-  }
-  return ret;
+static inline enum dicm_state get_state(struct _parser *parser) {
+  return parser->current_item_state;
+}
+
+static inline bool is_root_dataset(const struct _parser *self) {
+  return self->item_readers->size == 1;
 }
 
 int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
@@ -109,68 +88,90 @@ int _parser_get_value_length(struct dicm_parser *const self, uint32_t *len) {
   return 0;
 }
 
-static inline bool is_root_dataset(const struct _parser *self) {
-  return self->item_readers->size == 1;
+struct _item_reader get_new_reader_ds();
+struct _item_reader get_new_implicit_reader_ds();
+struct _item_reader get_new_reader_item();
+struct _item_reader get_new_reader_frag();
+
+static inline void push_ds_reader(struct _parser *parser,
+                                  const enum dicm_state current_state) {
+  assert(current_state == STATE_INVALID);
+  parser->current_item_state = current_state;
+
+  parser->value_length_pos = VL_UNDEFINED;
+  struct _item_reader new_item = get_new_reader_ds();
+  array_push(parser->item_readers, new_item);
+  assert(is_root_dataset(parser));
 }
 
-enum dicm_token _item_reader_next_impl(struct _item_reader *self,
-                                       struct dicm_src *src);
-enum dicm_token _item_reader_next_impl2(struct _item_reader *self);
-enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
-                                            struct dicm_src *src);
-enum dicm_token _fragments_reader_next_impl2(struct _item_reader *self);
-enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
-                                           struct dicm_src *src);
-enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
-                                             struct dicm_src *src);
-enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
-                                                  struct dicm_src *src);
+static inline void
+push_ds_implicit_reader(struct _parser *parser,
+                        const enum dicm_state current_state) {
+  assert(current_state == STATE_INVALID);
+  parser->current_item_state = current_state;
 
-static struct _item_reader_vtable const g_ds_vtable = {
-    /* ds reader interface */
-    .reader = {.fp_key_token = _item_reader_next_impl,
-               .fp_value_token = _item_reader_next_impl2,
-               .fp_next_event = _ds_reader_next_event}};
-static struct _item_reader_vtable const g_item_vtable = {
-    /* item reader interface */
-    .reader = {.fp_key_token = _item_reader_next_impl,
-               .fp_value_token = _item_reader_next_impl2,
-               .fp_next_event = _item_reader_next_event}};
-static struct _item_reader_vtable const g_fragment_vtable = {
-    /* fragment reader interface */
-    .reader = {.fp_key_token = _fragments_reader_next_impl,
-               .fp_value_token = _fragments_reader_next_impl2,
-               .fp_next_event = _fragments_reader_next_event}};
+  parser->value_length_pos = VL_UNDEFINED;
+  struct _item_reader new_item = get_new_implicit_reader_ds();
+  array_push(parser->item_readers, new_item);
+  assert(is_root_dataset(parser));
+}
+
+#define item_reader_next_level(t, state)                                       \
+  ((t)->vtable->reader.fp_next_level((t), (state)))
 
 static inline void push_item_reader(struct _parser *parser,
                                     const enum dicm_state current_state) {
-  assert(current_state == STATE_STARTSEQUENCE);
-  assert(array_back(parser->item_readers).current_item_state == current_state);
-
-  struct _item_reader new_item = {.current_item_state = current_state,
-                                  .vtable = &g_item_vtable};
+#if 0
+  struct _item_reader new_item = get_new_reader_item();
+#else
+  struct _item_reader *item_reader = get_item_reader(parser);
+  struct _item_reader new_item =
+      item_reader_next_level(item_reader, current_state);
+#endif
   array_push(parser->item_readers, new_item);
 }
 
-static inline void push_fragments_reader(struct _parser *parser,
-                                         const enum dicm_state current_state) {
-  assert(current_state == STATE_STARTFRAGMENTS);
-  assert(array_back(parser->item_readers).current_item_state == current_state);
-
-  struct _item_reader new_item = {.current_item_state = current_state,
-                                  .vtable = &g_fragment_vtable};
+static inline void push_fragments_reader(struct _parser *parser) {
+  struct _item_reader new_item = get_new_reader_frag();
   array_push(parser->item_readers, new_item);
 }
 
-static inline void pop_item_reader(struct _parser *parser,
-                                   const enum dicm_state current_state) {
-  assert(array_back(parser->item_readers).current_item_state == current_state);
-
+static inline void pop_item_reader(struct _parser *parser) {
   (void)array_pop(parser->item_readers);
-  struct _item_reader *item_reader = &array_back(parser->item_readers);
-  assert(item_reader->current_item_state == STATE_STARTSEQUENCE ||
-         item_reader->current_item_state == STATE_STARTFRAGMENTS);
-  item_reader->current_item_state = current_state; // re-initialize
+}
+
+/* public API */
+int dicm_parser_set_input(struct dicm_parser *self, const int structure_type,
+                          struct dicm_src *src) {
+  struct _parser *parser = (struct _parser *)self;
+  // clear any previous run:
+  parser->item_readers->size = 0;
+  parser->current_item_state = STATE_INVALID;
+  const enum dicm_structure_type estype = structure_type;
+  // update ready state:
+  parser->src = src;
+  enum dicm_state new_state = STATE_INVALID;
+  switch (estype) {
+  case DICM_STRUCTURE_ENCAPSULATED:
+    push_ds_reader(parser, STATE_INVALID);
+    new_state = STATE_INIT;
+    break;
+  case DICM_STRUCTURE_EXPLICIT_LE:
+    assert(0);
+    new_state = STATE_INIT;
+    break;
+  case DICM_STRUCTURE_EXPLICIT_BE:
+    assert(0);
+    new_state = STATE_INIT;
+    break;
+  case DICM_STRUCTURE_IMPLICIT:
+    push_ds_implicit_reader(parser, STATE_INVALID);
+    new_state = STATE_INIT;
+    break;
+  default:;
+  }
+  parser->current_item_state = new_state;
+  return new_state;
 }
 
 int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
@@ -186,19 +187,14 @@ int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
   if (err != (int64_t)to_read) {
     return -1;
   }
-#if 0
-  item_reader->value_length_pos += to_read;
-  assert(item_reader->value_length_pos <= item_reader->da.vl);
-#else
   parser->value_length_pos += to_read;
   assert(parser->value_length_pos <= item_reader->da.vl);
-#endif
 
   return 0;
 }
 
-#define item_reader_next_event(t, src)                                         \
-  ((t)->vtable->reader.fp_next_event((t), (src)))
+#define item_reader_next_event(t, tok, src)                                    \
+  ((t)->vtable->reader.fp_next_event((t), (tok), (src)))
 
 int dicm_parser_next_event(struct dicm_parser *self) {
   struct _parser *parser = (struct _parser *)self;
@@ -206,23 +202,16 @@ int dicm_parser_next_event(struct dicm_parser *self) {
   struct _item_reader *item_reader = get_item_reader(parser);
   // special init case
   // TODO: move to external state machine:
-  const enum dicm_state cur_state = get_current_state(parser);
-  if (STATE_INIT_E == cur_state) {
+  const enum dicm_state cur_state = get_state(parser);
+  if (STATE_INIT == cur_state) {
     assert(parser->src);
-    item_reader->current_item_state = STATE_STARTSTREAM;
+    parser->current_item_state = STATE_STARTSTREAM;
     return DICM_STREAM_START_EVENT;
-#if 0
-  } else if (STATE_STARTSTREAM == cur_state) {
-    if (!dicm_src_peek(parser->src))
-      return DICM_STREAM_END_EVENT;
-    item_reader->current_item_state = STATE_STARTDOCUMENT;
-    return DICM_DOCUMENT_START_EVENT;
-#endif
+  } else if (STATE_ENDSTREAM == cur_state) {
+    parser->current_item_state = STATE_INVALID;
+    return DICM_STREAM_END_EVENT;
   } else if (STATE_ENDDOCUMENT == cur_state) {
-#if 0
-    assert(!dicm_src_peek(parser->src));
-#endif
-    item_reader->current_item_state = STATE_ENDSTREAM;
+    parser->current_item_state = STATE_ENDSTREAM;
     return DICM_STREAM_END_EVENT;
   }
 
@@ -230,28 +219,33 @@ int dicm_parser_next_event(struct dicm_parser *self) {
     assert(item_reader->da.vl == parser->value_length_pos);
   }
   // else get next dicm event:
-  const enum dicm_event_type next =
-      item_reader_next_event(item_reader, parser->src);
+  const enum dicm_state new_state = item_reader_next_event(
+      item_reader, parser->current_item_state, parser->src);
+  parser->current_item_state = new_state;
   // at this point item_reader->current_item_state has been updated
-  if (next == DICM_VALUE_EVENT) {
+  if (new_state == STATE_VALUE) {
     parser->value_length_pos = 0;
   }
 
   // change item_reader based on state:
-  switch (get_current_state(parser)) {
+  switch (get_state(parser)) {
   case STATE_STARTSEQUENCE:
-    push_item_reader(parser, get_current_state(parser));
+    push_item_reader(parser, STATE_STARTSEQUENCE);
     break;
   case STATE_STARTFRAGMENTS:
-    push_fragments_reader(parser, get_current_state(parser));
+    push_fragments_reader(parser);
     break;
   case STATE_ENDSEQUENCE:
     /* item or fragment */
-    pop_item_reader(parser, get_current_state(parser));
+    pop_item_reader(parser);
     break;
   default:;
   }
 
+  if (new_state < 0) {
+    return -1;
+  }
+  const enum dicm_event_type next = state2event(new_state);
   return next;
 }
 
@@ -260,12 +254,7 @@ int dicm_parser_create(struct dicm_parser **pself) {
   if (self) {
     *pself = &self->parser;
     self->parser.vtable = &g_vtable;
-
-    // init with invalid state:
     array_new(item_reader_t, self->item_readers);
-    struct _item_reader new_item = {.current_item_state = STATE_INVALID,
-                                    .vtable = &g_ds_vtable};
-    array_push(self->item_readers, new_item);
 
     return 0;
   }
