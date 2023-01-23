@@ -9,6 +9,7 @@
 
 struct dicm_parser;
 struct parser_prv_vtable {
+#if 1
   /* kKey */
   DICM_CHECK_RETURN int (*fp_get_key)(struct dicm_parser *,
                                       struct dicm_key *) DICM_NONNULL;
@@ -18,6 +19,7 @@ struct parser_prv_vtable {
                                                uint32_t *) DICM_NONNULL;
   DICM_CHECK_RETURN int (*fp_read_value)(struct dicm_parser *, void *,
                                          size_t) DICM_NONNULL;
+#endif
 };
 
 /* common parser vtable */

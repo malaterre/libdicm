@@ -1,0 +1,7 @@
+stream-start
+document-start
+key 00880200
+sequence-start
+sequence-end
+document-end
+stream-end

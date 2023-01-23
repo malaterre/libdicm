@@ -3,6 +3,7 @@
 #include <assert.h> /* assert() */
 #include <stdio.h>  /* FILE* */
 #include <stdlib.h> /* EXIT_SUCCESS */
+#include <string.h> /* strcmp */
 
 static const char *events[] = {
     "stream-start", "stream-end",     "document-start", "document-end",
@@ -52,12 +53,15 @@ int parsing(int argc, char *argv[]) {
   uint32_t size, oldsize;
   int res;
   const size_t buflen = sizeof buf;
-  FILE *in = fopen(argv[1], "rb");
+  const char *structure = argv[1];
+  const char *infilename = argv[2];
+  const char *outfilename = argv[3];
+  FILE *in = fopen(infilename, "rb");
 
   dicm_configure_log_msg(my_log);
 
   dicm_src_file_create(&src, in);
-  FILE *out = fopen(argv[2], "w");
+  FILE *out = fopen(outfilename, "w");
 
   if (dicm_parser_create(&parser) < 0) {
     fprintf(stderr, "dummy: failed to initialize "
@@ -65,7 +69,14 @@ int parsing(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_parser_set_input(parser, DICM_STRUCTURE_ENCAPSULATED, src);
+  if (structure == NULL || strcmp("evrle_encapsulated", structure) == 0) {
+    dicm_parser_set_input(parser, DICM_STRUCTURE_ENCAPSULATED, src);
+  } else if (strcmp("ivrle_raw", structure) == 0) {
+    dicm_parser_set_input(parser, DICM_STRUCTURE_IMPLICIT, src);
+  } else {
+    fprintf(stderr, "Invalid structure: %s\n", structure);
+    exit(1);
+  }
 
   /* Read the event sequence. */
   while (!done) {
@@ -86,7 +97,11 @@ int parsing(int argc, char *argv[]) {
       res = dicm_parser_get_key(parser, &key);
       assert(res == 0);
       fprintf(out, "%s", events[etype]);
-      fprintf(out, " %08x %s", key.tag, (char *)&key.vr);
+      if (key.vr != 0) {
+        fprintf(out, " %08x %s", key.tag, (char *)&key.vr);
+      } else {
+        fprintf(out, " %08x", key.tag);
+      }
       break;
     case DICM_VALUE_EVENT:
       res = dicm_parser_get_value_length(parser, &size);

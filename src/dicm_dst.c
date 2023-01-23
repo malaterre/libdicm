@@ -109,7 +109,7 @@ int64_t mem_write(struct dicm_dst *const dst, const void *buf, size_t size) {
   if ((size_t)diff >= size) {
     memcpy(self->cur, buf, size);
     self->cur += size;
-    return size;
+    return (int64_t)size;
   }
   self->cur = self->end;
   return -1;

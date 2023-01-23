@@ -15,10 +15,8 @@ struct _attribute {
   uint32_t vr;
   /* the current vl */
   uint32_t vl;
-#if 0
-  /* TODO: alignement */
+  /* alignement, not used */
   uint32_t reserved;
-#endif
 };
 
 static inline bool _ude_init(union _ude *ude, const struct _attribute *da) {
@@ -41,36 +39,59 @@ struct _item_reader_prv_vtable {
   DICM_CHECK_RETURN enum dicm_token (*fp_key_token)(struct _item_reader *self,
                                                     struct dicm_src *src);
   /* before reading value (after key) */
-  DICM_CHECK_RETURN enum dicm_token (*fp_value_token)(
-      struct _item_reader *self);
+  DICM_CHECK_RETURN enum dicm_token (*fp_value_token)(struct _item_reader *self,
+                                                      struct dicm_src *src);
 
-  DICM_CHECK_RETURN enum dicm_event_type (*fp_next_event)(
-      struct _item_reader *self, struct dicm_src *src);
+  /* compute new state from current state + event */
+  DICM_CHECK_RETURN enum dicm_state (*fp_next_event)(
+      struct _item_reader *self, const enum dicm_state current_state,
+      struct dicm_src *src);
+
+  /* return next level emitter */
+  struct _item_reader (*fp_next_level)(struct _item_reader *self,
+                                       enum dicm_state new_state) DICM_NONNULL;
 };
 struct _item_reader_vtable {
   struct _item_reader_prv_vtable const reader;
 };
 struct _item_reader {
-  /* the current item state */
-  enum dicm_state current_item_state;
-
   struct _attribute da;
 
   struct _item_reader_vtable const *vtable;
 };
 
+// FIXME: rename to onelevel_writer or nested_emitter or sublevel_emitter
+struct _item_writer;
+struct _item_writer_prv_vtable {
+  /* writing key */
+  DICM_CHECK_RETURN enum dicm_state (*fp_key_token)(
+      struct _item_writer *self, struct dicm_dst *dst,
+      const enum dicm_token token);
+  /* writing vl */
+  DICM_CHECK_RETURN enum dicm_state (*fp_vl_token)(struct _item_writer *self,
+                                                   struct dicm_dst *dst,
+                                                   const enum dicm_token token);
+  /* writing value */
+  DICM_CHECK_RETURN enum dicm_state (*fp_value_token)(
+      struct _item_writer *self, struct dicm_dst *dst,
+      const enum dicm_token token);
+
+  /* compute new state from current state + event */
+  DICM_CHECK_RETURN enum dicm_state (*fp_next_event)(
+      struct _item_writer *self, const enum dicm_state current_state,
+      struct dicm_dst *dst, const enum dicm_event_type next);
+
+  /* return next level emitter */
+  struct _item_writer (*fp_next_level)(struct _item_writer *self,
+                                       enum dicm_state new_state) DICM_NONNULL;
+};
+struct _item_writer_vtable {
+  struct _item_writer_prv_vtable const writer;
+};
 struct _item_writer {
-  /* the current item state */
-  enum dicm_state current_item_state;
-
   struct _attribute da;
-
-  /* current pos in value_length */
-  uint32_t value_length_pos;
-
-  DICM_CHECK_RETURN int (*fp_next_token)(struct _item_writer *self,
-                                         struct dicm_dst *dst,
-                                         const enum dicm_event_type next);
+  /* FIXME: item number book-keeping */
+  struct _item_writer_vtable const *vtable;
 };
 
 /* tag */

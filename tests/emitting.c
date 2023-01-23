@@ -11,8 +11,8 @@ static const char *events[] = {
     "item-end",     "sequence-start", "sequence-end"};
 
 static int get_type(const char *line) {
-  const unsigned int n = sizeof(events) / sizeof(*events);
-  for (unsigned int i = 0; i < n; ++i) {
+  const int n = sizeof(events) / sizeof(*events);
+  for (int i = 0; i < n; ++i) {
     if (strncmp(line, events[i], strlen(events[i])) == 0) {
       return i;
     }
@@ -26,16 +26,16 @@ static void my_log(int log_level, const char *msg) {
 }
 
 int emitting(int argc, char *argv[]) {
+  if (argc < 4)
+    return EXIT_FAILURE;
   struct dicm_emitter *emitter;
   struct dicm_dst *dst;
   struct dicm_key key;
-  int done = 0;
   /* value */
   char buf[4096];
   uint32_t size;
   int res;
-  const size_t buflen = sizeof buf;
-  const char *transfer_syntax = argv[1];
+  const char *structure = argv[1];
   const char *infilename = argv[2];
   const char *outfilename = argv[3];
   FILE *in = fopen(infilename, "r");
@@ -51,21 +51,31 @@ int emitting(int argc, char *argv[]) {
     exit(1);
   }
 
-  dicm_emitter_set_output(emitter, DICM_STRUCTURE_ENCAPSULATED, dst);
+  if (structure == NULL || strcmp("evrle_encapsulated", structure) == 0) {
+    dicm_emitter_set_output(emitter, DICM_STRUCTURE_ENCAPSULATED, dst);
+  } else if (strcmp("ivrle_raw", structure) == 0) {
+    dicm_emitter_set_output(emitter, DICM_STRUCTURE_IMPLICIT, dst);
+  } else {
+    fprintf(stderr, "Invalid structure: %s\n", structure);
+    exit(1);
+  }
 
   char *line;
   uint32_t tag;
   char vr_str[2 + 1];
-  while (line = fgets(buf, sizeof buf, in)) {
+  int ret;
+  while ((line = fgets(buf, sizeof buf, in))) {
+    ret = EXIT_FAILURE;
     fprintf(stdout, "%s\n", line);
     enum dicm_event_type etype = get_type(line);
     switch (etype) {
     case DICM_KEY_EVENT:
       res = sscanf(line, "%*s %08x %s", &tag, vr_str);
-      assert(res == 2);
+      assert(res == 2 || res == 1);
       key.tag = tag;
       key.vr = 0;
-      memcpy(&key.vr, vr_str, 2);
+      if (res >= 2)
+        memcpy(&key.vr, vr_str, 2);
       res = dicm_emitter_set_key(emitter, &key);
       assert(res == 0);
       break;
@@ -73,23 +83,27 @@ int emitting(int argc, char *argv[]) {
       res = sscanf(line, "%*s %[^\n]s", buf);
       assert(res == 1 || res == -1);
       if (res == 1) {
-        size = strlen(buf);
+        size = (uint32_t)strlen(buf);
       } else {
         size = 0;
       }
-      res = dicm_emitter_set_value_length(emitter, &size);
+      res = dicm_emitter_set_value_length(emitter, size);
       assert(res == 0);
       res = dicm_emitter_write_value(emitter, buf, size);
       assert(res == 0);
       break;
+    case DICM_STREAM_END_EVENT:
+      ret = EXIT_SUCCESS;
+      break;
+    default:;
     }
     res = dicm_emitter_emit(emitter, etype);
-    assert(res == 0);
+    assert(res >= 0);
   }
 
   dicm_delete(emitter);
   dicm_delete(dst);
   fclose(in);
   fclose(out);
-  return EXIT_SUCCESS;
+  return ret;
 }

@@ -10,6 +10,12 @@ set(DICM_SOVERSION "${DICM_VERSION_MAJOR}")
 
 option(DICM_BUILD_EXAMPLES "Build DICM examples directory" OFF)
 
+# Which structures allowed:
+set(DICM_ENABLE_STRUCTURE_ENCAPSULATED ON)
+set(DICM_ENABLE_STRUCTURE_IMPLICT ON)
+set(DICM_ENABLE_STRUCTURE_EXPLICT_LE OFF)
+set(DICM_ENABLE_STRUCTURE_EXPLICT_BE OFF)
+
 # only export limited set of symbols
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -21,7 +27,9 @@ endif()
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-include(GNUInstallDirs)
+if(UNIX)
+  include(GNUInstallDirs)
+endif()
 
 add_subdirectory(include)
 add_subdirectory(src)
@@ -43,7 +51,8 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-# write dicm-config file:
+# write dicm-config file (handle `Config` mode):
+set(namespace "${PROJECT_NAME}::")
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/dicm-config-version.cmake"
@@ -52,5 +61,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dicm-config-version.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dicm")
 install(
   EXPORT dicm_targets
+  NAMESPACE "${namespace}"
   FILE dicm-config.cmake
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dicm")

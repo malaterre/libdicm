@@ -198,14 +198,14 @@ struct dicm_parser;
 
 /** Structure types. */
 enum dicm_structure_type {
-  /** Explicit Little Endian / Encapsulated Pixel Data */
-  DICM_STRUCTURE_ENCAPSULATED = 0, /* E */
-  /** Implicit */
-  DICM_STRUCTURE_IMPLICT, /* I */
-  /** Explicit Little Endian */
-  DICM_STRUCTURE_EXPLICIT_LE, /* L */
-  /** Explicit Big Endian */
-  DICM_STRUCTURE_EXPLICIT_BE, /* B */
+  /** Explicit VR Little Endian / Encapsulated Pixel Data */
+  DICM_STRUCTURE_ENCAPSULATED = 0, /* extension to EVRLE */
+  /** Implicit VR Little Endian */
+  DICM_STRUCTURE_IMPLICIT, /* aka IVRLE - See CP-246*/
+  /** Explicit VR Little Endian */
+  DICM_STRUCTURE_EXPLICIT_LE, /* aka EVRLE */
+  /** Explicit VR Big Endian */
+  DICM_STRUCTURE_EXPLICIT_BE, /* aka EVRBE */
 };
 
 struct dicm_key {
@@ -281,7 +281,7 @@ dicm_emitter_set_key(struct dicm_emitter *self,
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_emitter_set_value_length(struct dicm_emitter *self,
-                              const uint32_t *len) DICM_NONNULL;
+                              uint32_t len) DICM_NONNULL;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
