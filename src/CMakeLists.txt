@@ -14,9 +14,13 @@ set_target_properties(dicm PROPERTIES VERSION ${DICM_VERSION} SOVERSION
                                                               ${DICM_SOVERSION})
 
 target_include_directories(dicm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(dicm PUBLIC ${DICM_SOURCE_DIR}/include)
-
+# https://stackoverflow.com/questions/25676277/cmake-target-include-directories-prints-an-error-when-i-try-to-add-the-source
+target_include_directories(
+  dicm PUBLIC $<BUILD_INTERFACE:${DICM_SOURCE_DIR}/include>
+              $<INSTALL_INTERFACE:include/dicm> # <prefix>/include/dicm
+)
 install(
   TARGETS dicm
+  EXPORT dicm_targets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
   COMPONENT libraries)

@@ -42,3 +42,15 @@ mark_as_advanced(DICM_TEST_DATA_ROOT)
 if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
+
+# write dicm-config file:
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/dicm-config-version.cmake"
+  COMPATIBILITY SameMajorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dicm-config-version.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dicm")
+install(
+  EXPORT dicm_targets
+  FILE dicm-config.cmake
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dicm")
