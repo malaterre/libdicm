@@ -56,9 +56,6 @@ struct _item_reader {
 
   struct _attribute da;
 
-  /* current pos in value_length */
-  uint32_t value_length_pos;
-
   struct _item_reader_vtable const *vtable;
 };
 

@@ -128,7 +128,9 @@ enum dicm_token _item_reader_next_impl2(struct _item_reader *self) {
     return TOKEN_STARTSEQUENCE;
   } else {
     assert(!dicm_vl_is_undefined(self->da.vl));
+#if 0
     self->value_length_pos = 0;
+#endif
 
     return TOKEN_VALUE;
   }
@@ -179,7 +181,9 @@ enum dicm_event_type _ds_reader_next_event(struct _item_reader *self,
     break;
   case STATE_VALUE:
     // TODO: check user has consumed everything
+#if 0
     assert(self->da.vl == self->value_length_pos);
+#endif
   case STATE_ENDSEQUENCE: // re-enter case
     next = item_reader_key_token(self, src);
     if (next == TOKEN_EOF) {
@@ -317,7 +321,9 @@ enum dicm_event_type _item_reader_next_event(struct _item_reader *self,
     break;
   case STATE_VALUE:
     // TODO: check user has consumed everything
+#if 0
     assert(self->da.vl == self->value_length_pos);
+#endif
   case STATE_ENDSEQUENCE: // re-enter case
   case STATE_STARTITEM:
     next = item_reader_key_token(self, src);
@@ -487,7 +493,9 @@ int _item_writer_next_token(struct _item_writer *self, struct dicm_dst *dst,
 enum dicm_token _fragments_reader_next_impl2(struct _item_reader *self) {
   const dicm_vr_t vr = self->da.vr;
   assert(vr == VR_NONE);
+#if 0
   self->value_length_pos = 0;
+#endif
 
   return TOKEN_VALUE;
 }
@@ -527,7 +535,9 @@ enum dicm_event_type _fragments_reader_next_event(struct _item_reader *self,
     break;
   case STATE_VALUE:
     // TODO: check user has consumed everything
+#if 0
     assert(self->da.vl == self->value_length_pos);
+#endif
     next = item_reader_key_token(self, src);
     assert(next == TOKEN_FRAGMENT || next == TOKEN_ENDSQITEM);
     self->current_item_state =

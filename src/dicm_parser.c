@@ -13,6 +13,9 @@ struct _parser {
   /* data */
   struct dicm_src *src;
 
+  /* current pos in value_length */
+  uint32_t value_length_pos;
+
   /* item readers */
   array(item_reader_t) * item_readers;
 };
@@ -183,8 +186,13 @@ int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
   if (err != (int64_t)to_read) {
     return -1;
   }
+#if 0
   item_reader->value_length_pos += to_read;
   assert(item_reader->value_length_pos <= item_reader->da.vl);
+#else
+  parser->value_length_pos += to_read;
+  assert(parser->value_length_pos <= item_reader->da.vl);
+#endif
 
   return 0;
 }
@@ -217,10 +225,17 @@ int dicm_parser_next_event(struct dicm_parser *self) {
     item_reader->current_item_state = STATE_ENDSTREAM;
     return DICM_STREAM_END_EVENT;
   }
+
+  if (STATE_VALUE == cur_state) {
+    assert(item_reader->da.vl == parser->value_length_pos);
+  }
   // else get next dicm event:
   const enum dicm_event_type next =
       item_reader_next_event(item_reader, parser->src);
   // at this point item_reader->current_item_state has been updated
+  if (next == DICM_VALUE_EVENT) {
+    parser->value_length_pos = 0;
+  }
 
   // change item_reader based on state:
   switch (get_current_state(parser)) {
