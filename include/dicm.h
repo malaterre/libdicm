@@ -119,12 +119,19 @@ DICM_DECLARE(int)
 dicm_src_mem_create(struct dicm_src **pself, const void *ptr,
                     size_t size) DICM_NONNULL;
 
+/* like user defined but non-seekable */
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_src_stream_create(struct dicm_src **pself, void *data,
+                       int64_t (*fp_read)(struct dicm_src *, void *,
+                                          size_t)) DICM_NONNULL;
 /* user-defined */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_src_user_create(struct dicm_src **pself, void *data,
                      int64_t (*fp_read)(struct dicm_src *, void *, size_t),
-                     int64_t (*fp_seek)(struct dicm_src *, int64_t, int));
+                     int64_t (*fp_seek)(struct dicm_src *, int64_t,
+                                        int)) DICM_NONNULL;
 
 struct dicm_dst_vtable;
 struct dicm_dst {
@@ -148,13 +155,21 @@ DICM_DECLARE(int)
 dicm_dst_mem_create(struct dicm_dst **pself, void *ptr,
                     size_t size) DICM_NONNULL;
 
+/* like user-defined but non-seekable*/
+DICM_CHECK_RETURN
+DICM_DECLARE(int)
+dicm_dst_stream_create(struct dicm_dst **pself, void *data,
+                       int64_t (*fp_write)(struct dicm_dst *, const void *,
+                                           size_t)) DICM_NONNULL;
+
 /* user-defined */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_dst_user_create(struct dicm_dst **pself, void *data,
                      int64_t (*fp_write)(struct dicm_dst *, const void *,
                                          size_t),
-                     int64_t (*fp_seek)(struct dicm_dst *, int64_t, int));
+                     int64_t (*fp_seek)(struct dicm_dst *, int64_t,
+                                        int)) DICM_NONNULL;
 
 /** @} */
 
