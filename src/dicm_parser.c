@@ -91,6 +91,7 @@ int _parser_get_value_length(struct dicm_parser *const self, uint32_t *len) {
 struct _item_reader get_new_reader_ds();
 struct _item_reader get_new_implicit_reader_ds();
 struct _item_reader get_new_explicit_reader_ds();
+struct _item_reader get_new_evrbe_reader_ds();
 struct _item_reader get_new_reader_item();
 struct _item_reader get_new_reader_frag();
 
@@ -125,6 +126,17 @@ push_ds_explicit_reader(struct _parser *parser,
 
   parser->value_length_pos = VL_UNDEFINED;
   struct _item_reader new_item = get_new_explicit_reader_ds();
+  array_push(parser->item_readers, new_item);
+  assert(is_root_dataset(parser));
+}
+
+static inline void push_ds_evrbe_reader(struct _parser *parser,
+                                        const enum dicm_state current_state) {
+  assert(current_state == STATE_INVALID);
+  parser->current_item_state = current_state;
+
+  parser->value_length_pos = VL_UNDEFINED;
+  struct _item_reader new_item = get_new_evrbe_reader_ds();
   array_push(parser->item_readers, new_item);
   assert(is_root_dataset(parser));
 }
@@ -169,7 +181,7 @@ int dicm_parser_set_input(struct dicm_parser *self, const int structure_type,
     new_state = STATE_INIT;
     break;
   case DICM_STRUCTURE_EXPLICIT_BE:
-    assert(0);
+    push_ds_evrbe_reader(parser, STATE_INVALID);
     new_state = STATE_INIT;
     break;
   case DICM_STRUCTURE_IMPLICIT:

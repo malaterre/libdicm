@@ -33,6 +33,70 @@ static inline bool _ude_init(union _ude *ude, const struct _attribute *da) {
   return is_vr16;
 }
 
+// https://en.cppreference.com/w/c/language/union
+// c11 allows anonymous union/structure:
+struct evr {
+  union {
+    uint32_t bytes[4]; // 16 bytes, 32bits aligned
+    struct {
+      uint32_t tag, vr, vl, vr_size;
+    };
+  };
+};
+
+struct ivr {
+  union {
+    uint32_t bytes[4]; // 8 bytes, 32bits aligned
+    struct {
+      uint32_t tag, vl;
+    };
+  };
+};
+
+// struct dual {
+//	union {
+//	struct evr evr;
+//	struct ivr ivr;
+//	};
+//};
+
+static inline uint32_t evr_get_key_size(struct evr evr) {
+  return 4 + evr.vr_size;
+}
+
+static inline uint32_t evr_get_size(struct evr evr) {
+  return 4 + 2 * evr.vr_size;
+}
+
+static inline struct evr _evr_init(const struct _attribute *da) {
+  struct evr evr;
+  _Static_assert(16 == sizeof(evr), "16 bytes");
+  evr.tag = da->tag;
+  const uint32_t vr = da->vr;
+  const bool is_vr16 = _is_vr16(vr);
+  evr.vr = vr;
+  evr.vr_size = is_vr16 ? 2 : 4;
+  return evr;
+}
+
+static inline struct evr _evr_init2(const struct _attribute *da) {
+  struct evr evr;
+  evr.tag = bswap_32(da->tag);
+  const uint32_t vr = da->vr;
+  const bool is_vr16 = _is_vr16(vr);
+  evr.vr = vr;
+  evr.vl = is_vr16 ? bswap_16(da->vl) : bswap_32(da->vl);
+  evr.vr_size = is_vr16 ? 2 : 4;
+  return evr;
+}
+
+static inline struct ivr _ivr_init2(const struct _attribute *da) {
+  struct ivr ivr;
+  ivr.tag = bswap_32(da->tag);
+  ivr.vl = bswap_32(da->vl);
+  return ivr;
+}
+
 struct _item_reader;
 struct _item_reader_prv_vtable {
   /* before reading key */

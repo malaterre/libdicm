@@ -17,6 +17,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* FIXME: not portable */
+#include <byteswap.h>
+
 /* common object private vtable */
 struct object;
 struct object_prv_vtable {
@@ -131,11 +134,36 @@ union _ude {
   struct _ide ide;     // implicit data element (8 bytes)
 };
 
+struct _ede {
+  union {
+    struct {
+      uint32_t tag1;
+      uint32_t vr32;
+      uint32_t vl32;
+    }; // explicit data element. 12 bytes
+    struct {
+      uint32_t tag2;
+      uint16_t vr16;
+      uint16_t vl16;
+    }; // explicit data element, VR/VL 16. 8 bytes
+    uint32_t tag;
+  };
+};
+
+struct dual {
+  union {
+    struct _ede evr; // explicit data element (8/12 bytes)
+    struct _ide ivr; // implicit data element (8 bytes)
+  };
+};
+
+/*
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define SWAP_TAG(t) t = (t >> 16) | (t >> 16)
+#define SWAP_TAG(t) bswap_32(t)
 #else
 #error
 #endif
+*/
 
 static inline uint32_t _ide_get_tag(const union _ude *ude) {
   // byte-swap tag:

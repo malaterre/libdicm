@@ -51,8 +51,15 @@ static inline bool emitter_is_root_dataset(const struct _emitter *emitter) {
   return emitter->item_writers->size == 1;
 }
 
+#if 0
 void init_root_item_writer(struct _item_writer *new_item,
                            enum dicm_structure_type);
+#else
+void encap_init_item_writer(struct _item_writer *new_item);
+void ivrle_init_item_writer(struct _item_writer *new_item);
+void evrle_init_item_writer(struct _item_writer *new_item);
+void evrbe_init_item_writer(struct _item_writer *new_item);
+#endif
 
 static inline void
 emitter_set_root_level(struct _emitter *emitter,
@@ -64,7 +71,27 @@ emitter_set_root_level(struct _emitter *emitter,
   emitter->value_length_pos = VL_UNDEFINED;
   struct _item_writer new_item = {};
   array_push(emitter->item_writers, new_item);
+#if 0
   init_root_item_writer(&array_back(emitter->item_writers), structure_type);
+#else
+  struct _item_writer *root_item = &array_back(emitter->item_writers);
+  switch (structure_type) {
+  case DICM_STRUCTURE_ENCAPSULATED:
+    encap_init_item_writer(root_item);
+    break;
+  case DICM_STRUCTURE_IMPLICIT:
+    ivrle_init_item_writer(root_item);
+    break;
+  case DICM_STRUCTURE_EXPLICIT_LE:
+    evrle_init_item_writer(root_item);
+    break;
+  case DICM_STRUCTURE_EXPLICIT_BE:
+    evrbe_init_item_writer(root_item);
+    break;
+  default:
+    assert(0);
+  }
+#endif
   assert(emitter_is_root_dataset(emitter));
 }
 
@@ -145,11 +172,9 @@ int dicm_emitter_set_output(struct dicm_emitter *self, const int structure_type,
   case DICM_STRUCTURE_ENCAPSULATED:
   case DICM_STRUCTURE_IMPLICIT:
   case DICM_STRUCTURE_EXPLICIT_LE:
+  case DICM_STRUCTURE_EXPLICIT_BE:
     emitter_set_root_level(emitter, estype, STATE_INVALID);
     new_state = STATE_INIT;
-    break;
-  case DICM_STRUCTURE_EXPLICIT_BE:
-    assert(0);
     break;
   default:;
   }

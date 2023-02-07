@@ -64,8 +64,8 @@ static inline bool _attribute_is_valid(const struct _attribute *da) {
 #define item_writer_value_token(t, dst, tok)                                   \
   ((t)->vtable->writer.fp_value_token((t), (dst), (tok)))
 
-enum dicm_token _item_reader_next_impl(struct _item_reader *self,
-                                       struct dicm_src *src) {
+static enum dicm_token _item_reader_next_impl(struct _item_reader *self,
+                                              struct dicm_src *src) {
   union _ude ude;
   _Static_assert(16 == sizeof(ude), "16 bytes");
   _Static_assert(12 == sizeof(struct _ede32), "12 bytes");
@@ -127,8 +127,8 @@ enum dicm_token _item_reader_next_impl(struct _item_reader *self,
   return TOKEN_KEY;
 }
 
-enum dicm_token _item_reader_next_impl3(struct _item_reader *self,
-                                        struct dicm_src *src) {
+static enum dicm_token _item_reader_next_impl3(struct _item_reader *self,
+                                               struct dicm_src *src) {
   union _ude ude;
   _Static_assert(16 == sizeof(ude), "16 bytes");
   _Static_assert(12 == sizeof(struct _ede32), "12 bytes");
@@ -204,9 +204,10 @@ static enum dicm_token _item_reader_next_impl4(struct _item_reader *self,
   }
 }
 
-enum dicm_state _ds_reader_next_event(struct _item_reader *self,
-                                      const enum dicm_state current_state,
-                                      struct dicm_src *src) {
+static enum dicm_state
+_ds_reader_next_event(struct _item_reader *self,
+                      const enum dicm_state current_state,
+                      struct dicm_src *src) {
   enum dicm_token next;
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {
@@ -243,9 +244,9 @@ enum dicm_state _ds_reader_next_event(struct _item_reader *self,
   return new_state;
 }
 
-enum dicm_state _item_writer_write_key_explicit(struct _item_writer *self,
-                                                struct dicm_dst *dst,
-                                                const enum dicm_token token) {
+static enum dicm_state
+_item_writer_write_key_explicit(struct _item_writer *self, struct dicm_dst *dst,
+                                const enum dicm_token token) {
   assert(token == TOKEN_KEY);
   union _ude ude;
   const bool is_vr16 = _ude_init(&ude, &self->da);
@@ -255,9 +256,20 @@ enum dicm_state _item_writer_write_key_explicit(struct _item_writer *self,
   return STATE_KEY;
 }
 
-enum dicm_state _item_writer_write_key_implicit(struct _item_writer *self,
-                                                struct dicm_dst *dst,
-                                                const enum dicm_token token) {
+static enum dicm_state
+_item_writer_write_key_explicit2(struct _item_writer *self,
+                                 struct dicm_dst *dst,
+                                 const enum dicm_token token) {
+  assert(token == TOKEN_KEY);
+  const struct evr evr = _evr_init2(&self->da);
+  const uint32_t key_len = evr_get_key_size(evr);
+  const int64_t dlen = dicm_dst_write(dst, evr.bytes, key_len);
+  return dlen == (int64_t)key_len ? STATE_KEY : STATE_INVALID;
+}
+
+static enum dicm_state
+_item_writer_write_key_implicit(struct _item_writer *self, struct dicm_dst *dst,
+                                const enum dicm_token token) {
   assert(token == TOKEN_KEY);
   union _ude ude;
   _ide_set_tag(&ude, self->da.tag);
@@ -266,9 +278,9 @@ enum dicm_state _item_writer_write_key_implicit(struct _item_writer *self,
   return STATE_KEY;
 }
 
-enum dicm_state _item_writer_write_vl_explicit(struct _item_writer *self,
-                                               struct dicm_dst *dst,
-                                               const enum dicm_token token) {
+static enum dicm_state
+_item_writer_write_vl_explicit(struct _item_writer *self, struct dicm_dst *dst,
+                               const enum dicm_token token) {
   assert(token >= 0);
   union _ude ude;
   const bool is_vr16 = _ude_init(&ude, &self->da);
@@ -287,9 +299,32 @@ enum dicm_state _item_writer_write_vl_explicit(struct _item_writer *self,
   return STATE_VALUE;
 }
 
-enum dicm_state _item_writer_write_vl_implicit(struct _item_writer *self,
-                                               struct dicm_dst *dst,
-                                               const enum dicm_token token) {
+static enum dicm_state
+_item_writer_write_vl_explicit2(struct _item_writer *self, struct dicm_dst *dst,
+                                const enum dicm_token token) {
+  assert(token >= 0);
+  union _ude ude;
+  const bool is_vr16 = _ude_init(&ude, &self->da);
+  const size_t len16 = is_vr16 ? 2u : 4u;
+  const uint32_t s = self->da.vl;
+  int64_t dlen;
+  if (is_vr16) {
+    _ede16_set_vl(&ude, s);
+    const uint16_t be = bswap_16(ude.ede16.vl16);
+    dlen = dicm_dst_write(dst, &be, len16);
+  } else {
+    _ede32_set_vl(&ude, s);
+    const uint32_t be = bswap_32(ude.ede32.vl);
+    dlen = dicm_dst_write(dst, &be, len16);
+  }
+  assert(dlen == (int64_t)len16);
+
+  return STATE_VALUE;
+}
+
+static enum dicm_state
+_item_writer_write_vl_implicit(struct _item_writer *self, struct dicm_dst *dst,
+                               const enum dicm_token token) {
   assert(token >= 0);
   union _ude ude;
   const bool is_vr16 = false; //_ude_init(&ude, &self->da);
@@ -365,7 +400,7 @@ static enum dicm_state _item_writer_impl2(struct _item_writer *self,
   return new_state;
 }
 
-enum dicm_state
+static enum dicm_state
 _item_writer_write_value_encapsulated(struct _item_writer *self,
                                       struct dicm_dst *dst,
                                       const enum dicm_token token) {
@@ -393,9 +428,9 @@ _item_writer_write_value_encapsulated(struct _item_writer *self,
   return new_state;
 }
 
-enum dicm_state _item_writer_write_value_common(struct _item_writer *self,
-                                                struct dicm_dst *dst,
-                                                const enum dicm_token token) {
+static enum dicm_state
+_item_writer_write_value_common(struct _item_writer *self, struct dicm_dst *dst,
+                                const enum dicm_token token) {
   assert(token == TOKEN_VALUE || TOKEN_STARTSEQUENCE);
   enum dicm_state new_state = STATE_INVALID;
   switch (token) {
@@ -404,15 +439,13 @@ enum dicm_state _item_writer_write_value_common(struct _item_writer *self,
     break;
   case TOKEN_STARTSEQUENCE:
     self->da.vl = VL_UNDEFINED;
-    const bool enc =
-        false; // dicm_attribute_is_encapsulated_pixel_data(&self->da);
     {
       union _ude ude;
       _ede32_set_vl(&ude, VL_UNDEFINED);
       int64_t err = dicm_dst_write(dst, &ude.ede32.vl, 4);
       assert(err == 4);
     }
-    new_state = enc ? STATE_STARTFRAGMENTS : STATE_STARTSEQUENCE;
+    new_state = STATE_STARTSEQUENCE;
     break;
   default:
     assert(0);
@@ -421,10 +454,10 @@ enum dicm_state _item_writer_write_value_common(struct _item_writer *self,
   return new_state;
 }
 
-enum dicm_state _ds_writer_next_event(struct _item_writer *self,
-                                      const enum dicm_state current_state,
-                                      struct dicm_dst *dst,
-                                      const enum dicm_event_type next) {
+static enum dicm_state
+_ds_writer_next_event(struct _item_writer *self,
+                      const enum dicm_state current_state, struct dicm_dst *dst,
+                      const enum dicm_event_type next) {
   const enum dicm_token token = event2token(next);
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {
@@ -451,9 +484,10 @@ enum dicm_state _ds_writer_next_event(struct _item_writer *self,
   return new_state;
 }
 
-enum dicm_state _item_reader_next_event(struct _item_reader *self,
-                                        const enum dicm_state current_state,
-                                        struct dicm_src *src) {
+static enum dicm_state
+_item_reader_next_event(struct _item_reader *self,
+                        const enum dicm_state current_state,
+                        struct dicm_src *src) {
   enum dicm_token next;
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {
@@ -493,10 +527,10 @@ enum dicm_state _item_reader_next_event(struct _item_reader *self,
   return new_state;
 }
 
-enum dicm_state _item_writer_next_event(struct _item_writer *self,
-                                        const enum dicm_state current_state,
-                                        struct dicm_dst *dst,
-                                        const enum dicm_event_type next) {
+static enum dicm_state
+_item_writer_next_event(struct _item_writer *self,
+                        const enum dicm_state current_state,
+                        struct dicm_dst *dst, const enum dicm_event_type next) {
   const enum dicm_token token = event2token(next);
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {
@@ -781,20 +815,15 @@ _item_next_level_implicit(struct _item_writer *self,
   return new_item;
 }
 
-void init_root_item_writer(struct _item_writer *new_item,
-                           const enum dicm_structure_type structure_type) {
+void encap_init_item_writer(struct _item_writer *new_item) {
   assert(new_item->da.tag == 0x0);
-  switch (structure_type) {
-  case DICM_STRUCTURE_ENCAPSULATED:
-    new_item->vtable = &g_ds_vtable;
-    break;
-  case DICM_STRUCTURE_IMPLICIT:
-    new_item->vtable = &g_ds_imp_vtable;
-    break;
-  case DICM_STRUCTURE_EXPLICIT_LE:
-    new_item->vtable = &g_ds_exp_vtable;
-    break;
-  default:
-    assert(0);
-  }
+  new_item->vtable = &g_ds_vtable;
+}
+void ivrle_init_item_writer(struct _item_writer *new_item) {
+  assert(new_item->da.tag == 0x0);
+  new_item->vtable = &g_ds_imp_vtable;
+}
+void evrle_init_item_writer(struct _item_writer *new_item) {
+  assert(new_item->da.tag == 0x0);
+  new_item->vtable = &g_ds_exp_vtable;
 }

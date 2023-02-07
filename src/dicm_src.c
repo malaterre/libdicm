@@ -191,9 +191,10 @@ int user_destroy(struct object *obj) {
   return 0;
 }
 
-int dicm_src_user_create(struct dicm_src **pself, void *data,
-                         int64_t (*fp_read)(struct dicm_src *, void *, size_t),
-                         int64_t (*fp_seek)(struct dicm_src *, int64_t, int)) {
+static int
+src_user_create(struct dicm_src **pself, void *data,
+                int64_t (*fp_read)(struct dicm_src *, void *, size_t),
+                int64_t (*fp_seek)(struct dicm_src *, int64_t, int)) {
   struct dicm_src_user *self = (struct dicm_src_user *)malloc(sizeof(*self));
   if (self) {
     struct dicm_src_vtable *tmp =
@@ -215,4 +216,15 @@ int dicm_src_user_create(struct dicm_src **pself, void *data,
   }
   *pself = NULL;
   return -1;
+}
+
+int dicm_src_stream_create(struct dicm_src **pself, void *data,
+                           int64_t (*fp_read)(struct dicm_src *, void *,
+                                              size_t)) {
+  return src_user_create(pself, data, fp_read, NULL);
+}
+int dicm_src_user_create(struct dicm_src **pself, void *data,
+                         int64_t (*fp_read)(struct dicm_src *, void *, size_t),
+                         int64_t (*fp_seek)(struct dicm_src *, int64_t, int)) {
+  return src_user_create(pself, data, fp_read, fp_seek);
 }
