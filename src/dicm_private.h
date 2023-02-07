@@ -193,9 +193,6 @@ enum dicm_state {
   STATE_INVALID = -1,
   /* ready state (after invalid) */
   STATE_INIT = 0,
-  /* stream */
-  STATE_STARTSTREAM,
-  STATE_ENDSTREAM,
   /* document */
   STATE_STARTDOCUMENT,
   STATE_ENDDOCUMENT,
@@ -270,9 +267,6 @@ state2event(const enum dicm_state new_state) {
     break;
   case STATE_ENDDOCUMENT:
     next = DICM_DOCUMENT_END_EVENT;
-    break;
-  case STATE_ENDSTREAM:
-    next = DICM_STREAM_END_EVENT;
     break;
   default:
     assert(0);

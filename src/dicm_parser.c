@@ -205,14 +205,8 @@ int dicm_parser_next_event(struct dicm_parser *self) {
   const enum dicm_state cur_state = get_state(parser);
   if (STATE_INIT == cur_state) {
     assert(parser->src);
-    parser->current_item_state = STATE_STARTSTREAM;
-    return DICM_STREAM_START_EVENT;
-  } else if (STATE_ENDSTREAM == cur_state) {
-    parser->current_item_state = STATE_INVALID;
-    return DICM_STREAM_END_EVENT;
-  } else if (STATE_ENDDOCUMENT == cur_state) {
-    parser->current_item_state = STATE_ENDSTREAM;
-    return DICM_STREAM_END_EVENT;
+    parser->current_item_state = STATE_STARTDOCUMENT;
+    return DICM_DOCUMENT_START_EVENT;
   }
 
   if (STATE_VALUE == cur_state) {

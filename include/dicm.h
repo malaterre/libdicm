@@ -166,13 +166,9 @@ dicm_dst_user_create(struct dicm_dst **pself, void *data,
 /** Event types. */
 enum dicm_event_type {
   /* negative value are reserved for errors */
-  /** A STREAM-START event. */
-  DICM_STREAM_START_EVENT = 0,
-  /** A STREAM-END event. */
-  DICM_STREAM_END_EVENT,
 
   /** A DOCUMENT-START event. */
-  DICM_DOCUMENT_START_EVENT,
+  DICM_DOCUMENT_START_EVENT = 0,
   /** A DOCUMENT-END event. */
   DICM_DOCUMENT_END_EVENT,
 

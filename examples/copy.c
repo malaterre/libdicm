@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     assert(res >= 0);
 
     /* Are we finished? */
-    done = (etype == DICM_STREAM_END_EVENT);
+    done = (etype == DICM_DOCUMENT_END_EVENT);
   }
 
   /* Destroy the Parser object. */

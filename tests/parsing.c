@@ -6,9 +6,9 @@
 #include <string.h> /* strcmp */
 
 static const char *events[] = {
-    "stream-start", "stream-end",     "document-start", "document-end",
-    "key",          "fragment",       "value",          "item-start",
-    "item-end",     "sequence-start", "sequence-end"};
+    "document-start", "document-end",   "key",
+    "fragment",       "value",          "item-start",
+    "item-end",       "sequence-start", "sequence-end"};
 
 static struct log_count {
   unsigned int trace;
@@ -126,7 +126,7 @@ int parsing(int argc, char *argv[]) {
     }
 
     /* Are we finished? */
-    done = (etype == DICM_STREAM_END_EVENT);
+    done = (etype == DICM_DOCUMENT_END_EVENT);
     fprintf(out, "\n");
     // not a benchmark tool:
     fflush(out);

@@ -13,14 +13,8 @@ set(STRUCTURE_NAMES
     ivrle_raw #
     # evrle_raw # little-endian evrbe_raw # big-endian
 )
-set(COMMON_CASES
-    empty
-    simple
-    simple_sqi
-    simple_empty_sqi
-    simple_sqi_empty_item
-    simple_nested_sqi
-    simple_sqi_two_items)
+set(COMMON_CASES simple simple_sqi simple_empty_sqi simple_sqi_empty_item
+                 simple_nested_sqi simple_sqi_two_items)
 set(raw_CASES simple_pd)
 set(encapsulated_CASES simple_sqf simple_sqf_empty_frag simple_nested_sqf)
 
@@ -94,7 +88,8 @@ endfunction()
 
 if(DICM_TEST_DATA_ROOT)
   set(truncated_folder ${CMAKE_CURRENT_BINARY_DIR}/truncated)
-  set(TRUNCATED_DATASETS single_byte single_tag single_tag_vr missing_value)
+  set(TRUNCATED_DATASETS empty single_byte single_tag single_tag_vr
+                         missing_value)
   foreach(structure_name ${STRUCTURE_NAMES})
     # prepare folder to store generated files:
     file(MAKE_DIRECTORY ${truncated_folder}/${structure_name})
