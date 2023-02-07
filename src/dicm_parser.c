@@ -121,13 +121,9 @@ push_ds_implicit_reader(struct _parser *parser,
 
 static inline void push_item_reader(struct _parser *parser,
                                     const enum dicm_state current_state) {
-#if 0
-  struct _item_reader new_item = get_new_reader_item();
-#else
   struct _item_reader *item_reader = get_item_reader(parser);
   struct _item_reader new_item =
       item_reader_next_level(item_reader, current_state);
-#endif
   array_push(parser->item_readers, new_item);
 }
 
@@ -146,11 +142,10 @@ int dicm_parser_set_input(struct dicm_parser *self, const int structure_type,
   struct _parser *parser = (struct _parser *)self;
   // clear any previous run:
   parser->item_readers->size = 0;
-  parser->current_item_state = STATE_INVALID;
-  const enum dicm_structure_type estype = structure_type;
   // update ready state:
   parser->src = src;
   enum dicm_state new_state = STATE_INVALID;
+  const enum dicm_structure_type estype = structure_type;
   switch (estype) {
   case DICM_STRUCTURE_ENCAPSULATED:
     push_ds_reader(parser, STATE_INVALID);
@@ -185,6 +180,7 @@ int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
   struct dicm_src *src = parser->src;
   int64_t err = dicm_src_read(src, b, to_read);
   if (err != (int64_t)to_read) {
+    parser->current_item_state = STATE_INVALID;
     return -1;
   }
   parser->value_length_pos += to_read;
