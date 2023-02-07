@@ -690,6 +690,11 @@ struct _item_reader get_new_implicit_reader_ds() {
   return new_item;
 }
 
+struct _item_reader get_new_explicit_reader_ds() {
+  struct _item_reader new_item = {.vtable = &se_ds_vtable};
+  return new_item;
+}
+
 struct _item_reader get_new_reader_item() {
   struct _item_reader new_item = {.vtable = &se_item_vtable};
   return new_item;
@@ -721,6 +726,13 @@ static struct _item_writer_vtable const g_ds_imp_vtable = {
                .fp_vl_token = _item_writer_write_vl_implicit,
                .fp_value_token = _item_writer_write_value_common,
                .fp_next_level = _item_next_level_implicit,
+               .fp_next_event = _ds_writer_next_event}};
+static struct _item_writer_vtable const g_ds_exp_vtable = {
+    /* ds writer interface */
+    .writer = {.fp_key_token = _item_writer_write_key_explicit,
+               .fp_vl_token = _item_writer_write_vl_explicit,
+               .fp_value_token = _item_writer_write_value_common,
+               .fp_next_level = _item_next_level,
                .fp_next_event = _ds_writer_next_event}};
 static struct _item_writer_vtable const g_item_vtable = {
     /* item writer interface */
@@ -778,6 +790,9 @@ void init_root_item_writer(struct _item_writer *new_item,
     break;
   case DICM_STRUCTURE_IMPLICIT:
     new_item->vtable = &g_ds_imp_vtable;
+    break;
+  case DICM_STRUCTURE_EXPLICIT_LE:
+    new_item->vtable = &g_ds_exp_vtable;
     break;
   default:
     assert(0);

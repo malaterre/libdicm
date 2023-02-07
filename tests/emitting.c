@@ -55,6 +55,8 @@ int emitting(int argc, char *argv[]) {
     dicm_emitter_set_output(emitter, DICM_STRUCTURE_ENCAPSULATED, dst);
   } else if (strcmp("ivrle_raw", structure) == 0) {
     dicm_emitter_set_output(emitter, DICM_STRUCTURE_IMPLICIT, dst);
+  } else if (strcmp("evrle_raw", structure) == 0) {
+    dicm_emitter_set_output(emitter, DICM_STRUCTURE_EXPLICIT_LE, dst);
   } else {
     fprintf(stderr, "Invalid structure: %s\n", structure);
     exit(1);

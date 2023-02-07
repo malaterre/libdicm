@@ -144,10 +144,10 @@ int dicm_emitter_set_output(struct dicm_emitter *self, const int structure_type,
   switch (estype) {
   case DICM_STRUCTURE_ENCAPSULATED:
   case DICM_STRUCTURE_IMPLICIT:
+  case DICM_STRUCTURE_EXPLICIT_LE:
     emitter_set_root_level(emitter, estype, STATE_INVALID);
     new_state = STATE_INIT;
     break;
-  case DICM_STRUCTURE_EXPLICIT_LE:
   case DICM_STRUCTURE_EXPLICIT_BE:
     assert(0);
     break;
