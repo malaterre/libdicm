@@ -160,11 +160,11 @@ int user_destroy(struct object *obj) {
   return 0;
 }
 
-int dicm_dst_user_create(struct dicm_dst **pself, void *data,
-                         int64_t (*fp_write)(struct dicm_dst *const,
-                                             const void *, size_t),
-                         int64_t (*fp_seek)(struct dicm_dst *const, int64_t,
-                                            int)) {
+static int dst_user_create(struct dicm_dst **pself, void *data,
+                           int64_t (*fp_write)(struct dicm_dst *const,
+                                               const void *, size_t),
+                           int64_t (*fp_seek)(struct dicm_dst *const, int64_t,
+                                              int)) {
   struct dicm_dst_user *self = (struct dicm_dst_user *)malloc(sizeof(*self));
   if (self) {
     struct dicm_dst_vtable *tmp =
@@ -184,4 +184,17 @@ int dicm_dst_user_create(struct dicm_dst **pself, void *data,
   }
   *pself = NULL;
   return -1;
+}
+
+int dicm_dst_stream_create(struct dicm_dst **pself, void *data,
+                           int64_t (*fp_write)(struct dicm_dst *const,
+                                               const void *, size_t)) {
+  return dst_user_create(pself, data, fp_write, NULL);
+}
+int dicm_dst_user_create(struct dicm_dst **pself, void *data,
+                         int64_t (*fp_write)(struct dicm_dst *const,
+                                             const void *, size_t),
+                         int64_t (*fp_seek)(struct dicm_dst *const, int64_t,
+                                            int)) {
+  return dst_user_create(pself, data, fp_write, fp_seek);
 }

@@ -12,7 +12,7 @@ set(STRUCTURE_NAMES
     evrle_encapsulated #
     ivrle_raw #
     evrle_raw # little-endian
-    # evrbe_raw # big-endian
+    evrbe_raw # big-endian
 )
 set(COMMON_CASES simple simple_sqi simple_empty_sqi simple_sqi_empty_item
                  simple_nested_sqi simple_sqi_two_items)

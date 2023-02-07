@@ -75,6 +75,8 @@ int parsing(int argc, char *argv[]) {
     dicm_parser_set_input(parser, DICM_STRUCTURE_IMPLICIT, src);
   } else if (strcmp("evrle_raw", structure) == 0) {
     dicm_parser_set_input(parser, DICM_STRUCTURE_EXPLICIT_LE, src);
+  } else if (strcmp("evrbe_raw", structure) == 0) {
+    dicm_parser_set_input(parser, DICM_STRUCTURE_EXPLICIT_BE, src);
   } else {
     fprintf(stderr, "Invalid structure: %s\n", structure);
     exit(1);
