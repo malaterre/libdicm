@@ -6,9 +6,9 @@
 #include <string.h> /* strlen */
 
 static const char *events[] = {
-    "stream-start", "stream-end",     "document-start", "document-end",
-    "key",          "fragment",       "value",          "item-start",
-    "item-end",     "sequence-start", "sequence-end"};
+    "document-start", "document-end",   "key",
+    "fragment",       "value",          "item-start",
+    "item-end",       "sequence-start", "sequence-end"};
 
 static int get_type(const char *line) {
   const int n = sizeof(events) / sizeof(*events);
@@ -92,7 +92,8 @@ int emitting(int argc, char *argv[]) {
       res = dicm_emitter_write_value(emitter, buf, size);
       assert(res == 0);
       break;
-    case DICM_STREAM_END_EVENT:
+    case DICM_DOCUMENT_END_EVENT:
+      assert(ret == EXIT_FAILURE);
       ret = EXIT_SUCCESS;
       break;
     default:;

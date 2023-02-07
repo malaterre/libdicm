@@ -210,19 +210,9 @@ enum dicm_state _ds_reader_next_event(struct _item_reader *self,
   enum dicm_token next;
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {
-  case STATE_STARTSTREAM:
-    next = item_reader_key_token(self, src);
-    if (next == TOKEN_INVALID_DATA) {
-      new_state = STATE_INVALID;
-    } else if (next == TOKEN_EOF) {
-      new_state = STATE_ENDSTREAM;
-    } else {
-      assert(next == TOKEN_KEY);
-      new_state = STATE_STARTDOCUMENT;
-    }
-    break;
   case STATE_STARTDOCUMENT:
-    next = TOKEN_KEY;
+    next = item_reader_key_token(self, src);
+    /* empty document is an error */
     new_state = next == TOKEN_KEY ? STATE_KEY : STATE_INVALID;
     break;
   case STATE_KEY:
@@ -435,14 +425,6 @@ enum dicm_state _ds_writer_next_event(struct _item_writer *self,
                                       const enum dicm_state current_state,
                                       struct dicm_dst *dst,
                                       const enum dicm_event_type next) {
-  if (next == DICM_DOCUMENT_START_EVENT) {
-    assert(current_state == STATE_STARTSTREAM);
-    return STATE_STARTDOCUMENT;
-  } else if (next == DICM_STREAM_END_EVENT) {
-    assert(current_state == STATE_ENDDOCUMENT ||
-           current_state == STATE_STARTSTREAM);
-    return STATE_ENDSTREAM;
-  }
   const enum dicm_token token = event2token(next);
   enum dicm_state new_state = STATE_INVALID;
   switch (current_state) {

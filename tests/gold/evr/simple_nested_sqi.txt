@@ -1,4 +1,3 @@
-stream-start
 document-start
 key 00082112 SQ
 sequence-start
@@ -15,4 +14,3 @@ sequence-end
 item-end
 sequence-end
 document-end
-stream-end

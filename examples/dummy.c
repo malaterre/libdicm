@@ -5,7 +5,6 @@
 #include <stdlib.h> /* exit() */
 
 static const char *events[] = {
-    "DICM_STREAM_START_EVENT",  "DICM_STREAM_END_EVENT",
     "DICM_DATASET_START_EVENT", "DICM_DATASET_END_EVENT",
     "DICM_ELEMENT_KEY_EVENT",   "DICM_FRAGMENT_EVENT",
     "DICM_ELEMENT_VALUE_EVENT", "DICM_ITEM_START_EVENT",
@@ -94,7 +93,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Are we finished? */
-    done = (etype == DICM_STREAM_END_EVENT);
+    done = (etype == DICM_DOCUMENT_END_EVENT);
   }
 
   /* Destroy the Parser object. */

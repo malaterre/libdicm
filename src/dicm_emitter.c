@@ -96,9 +96,9 @@ static enum dicm_state emitter_emit(struct _emitter *emitter,
   // special init case
   if (emitter_get_state(emitter) == STATE_INIT) {
     assert(emitter->dst);
-    assert(next == DICM_STREAM_START_EVENT);
-    emitter->current_item_state = STATE_STARTSTREAM;
-    return STATE_STARTSTREAM;
+    assert(next == DICM_DOCUMENT_START_EVENT);
+    emitter->current_item_state = STATE_STARTDOCUMENT;
+    return STATE_STARTDOCUMENT;
   }
 
   // else compute new state from event:
@@ -161,7 +161,8 @@ int dicm_emitter_emit(struct dicm_emitter *self, const int event_type) {
   struct _emitter *emitter = (struct _emitter *)self;
   if (emitter->current_item_state == STATE_INVALID) {
     return STATE_INVALID;
-  } if (event_type < 0) {
+  }
+  if (event_type < 0) {
     emitter->current_item_state = STATE_INVALID;
     return STATE_INVALID;
   }
