@@ -1,0 +1,4 @@
+document-start
+key fffcfffc OB
+value 00
+document-end

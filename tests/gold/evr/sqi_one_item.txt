@@ -1,0 +1,9 @@
+document-start
+key 00082112 SQ
+sequence-start
+item-start
+key 00081155 UI
+value 1.2.3.4.5.6.7.8.90
+item-end
+sequence-end
+document-end
