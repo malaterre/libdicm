@@ -371,4 +371,9 @@ event2token(const enum dicm_event_type event_type) {
   return token;
 }
 
+/* helpers */
+static inline bool is_aligned(const void *restrict pointer, size_t byte_count) {
+  return (uintptr_t)pointer % byte_count == 0;
+}
+
 #endif /* DICM_PRIVATE_H */

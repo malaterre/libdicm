@@ -195,6 +195,7 @@ int dicm_parser_set_input(struct dicm_parser *self, const int structure_type,
 }
 
 int _parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
+  assert(is_aligned(b, 2U));
   struct _parser *parser = (struct _parser *)self;
   struct _item_reader *item_reader = get_item_reader(parser);
   const uint32_t value_length = item_reader->da.vl;

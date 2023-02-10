@@ -68,13 +68,23 @@ static inline uint32_t evr_get_size(struct evr evr) {
   return 4 + 2 * evr.vr_size;
 }
 
-static inline struct evr _evr_init(const struct _attribute *da) {
+static inline struct evr _evr_init1(const struct _attribute *da) {
   struct evr evr;
   _Static_assert(16 == sizeof(evr), "16 bytes");
+#if 0
   evr.tag = da->tag;
+#else
+  union {
+    uint32_t t;
+    uint16_t a[2];
+  } u;
+  u.t = da->tag;
+  evr.tag = (uint32_t)((uint32_t)u.a[0] << 16u | u.a[1]);
+#endif
   const uint32_t vr = da->vr;
   const bool is_vr16 = _is_vr16(vr);
   evr.vr = vr;
+  evr.vl = is_vr16 ? da->vl : da->vl;
   evr.vr_size = is_vr16 ? 2 : 4;
   return evr;
 }

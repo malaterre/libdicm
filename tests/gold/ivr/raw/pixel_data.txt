@@ -1,6 +1,4 @@
 document-start
-key 00080005
-value ISO_IR 100
 key 7fe00010
 value ABCDEFGHIJKLMNOP
 document-end

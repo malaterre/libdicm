@@ -1,0 +1,247 @@
+document-start
+key 00080005 CS
+value ISO_IR 192
+key 00080008 CS
+value ORIGINAL\PRIMARY\STATIC\EMISSION
+key 00080016 UI
+value 1.2.840.10008.5.1.4.1.1.20
+key 00080018 UI
+value 1.2.392.200131.1.100.114.25323660201300.1111091142592.1.10
+key 00080020 DA
+value 20230210
+key 00080021 DA
+value 20230210
+key 00080022 DA
+value 20230210
+key 00080023 DA
+value 20230210
+key 0008002a DT
+value 20080703152654.780000 
+key 00080030 TM
+value 123456
+key 00080031 TM
+value 123456
+key 00080032 TM
+value 123456
+key 00080033 TM
+value 123456
+key 00080060 CS
+value NM
+key 00081060 PN
+value 
+key 00082111 ST
+value Lossless JPEG compression, selection value 1, point transform 0, compression ratio 4.1187 [Lossless JPEG compression, selection value 1, point transform 0, compression ratio 4.1187] 
+key 00089215 SQ
+sequence-start
+item-start
+key 00080100 SH
+value 121327
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Full fidelity image 
+item-end
+sequence-end
+key 00089459 FL
+value 1234
+key 00100010 PN
+value テストです 
+key 00101010 AS
+value 043Y
+key 00104000 LT
+value A character string that may contain one or more paragraphs
+key 00180050 DS
+value 10.000000 
+key 00180088 DS
+value 5.000000
+key 00181000 LO
+value 001 
+key 00181074 DS
+value 111.000000
+key 00181100 DS
+value 256 
+key 00181180 SH
+value AP
+key 00181181 CS
+value FANB
+key 001811b7 FD
+value ABCDEFGH
+key 00181242 IS
+value 1800000 
+key 0020000d UI
+value 1.2.392.200131.1.100.114.25323660201300.11110911425920
+key 0020000e UI
+value 1.2.392.200131.1.100.114.25323660201300.1111091142592.10
+key 00200011 IS
+value 00021 
+key 00200012 IS
+value 0 
+key 00200013 IS
+value 1 
+key 00200020 CS
+value H\A 
+key 00200032 DS
+value 0.0\0.0\0.0 
+key 00200037 DS
+value 0.0\0.0\0.0\0.0\0.0\0.0 
+key 00201002 IS
+value 31
+key 00280002 US
+value 00
+key 00280004 CS
+value PALETTE COLOR 
+key 00280008 IS
+value 31
+key 00280009 AT
+value 12345678ABCDEFGH
+key 00280010 US
+value 11
+key 00280011 US
+value 22
+key 00280030 DS
+value 2.000000\2.000000 
+key 00280100 US
+value 33
+key 00280101 US
+value 44
+key 00280102 US
+value 55
+key 00280103 US
+value 66
+key 00280106 SS
+value ZZ
+key 00280107 SS
+value 77
+key 00280108 SS
+value YY
+key 00280109 SS
+value 88
+key 00281101 US
+value 99
+key 00281102 US
+value AA
+key 00281103 US
+value BB
+key 00281201 US
+value A1B2C3D4E5F6G7H8
+key 00281202 US
+value C2
+key 00281203 US
+value C3
+key 00340002 OB
+value 01234567
+key 00400241 AE
+value AB_CDEFG_HIJ
+key 00540010 US
+value CC
+key 00540011 US
+value DD
+key 00540012 SQ
+sequence-start
+sequence-end
+key 00540016 SQ
+sequence-start
+sequence-end
+key 00540020 US
+value EE
+key 00540021 US
+value FF
+key 00540022 SQ
+sequence-start
+sequence-end
+key 00540030 US
+value GG
+key 00540031 US
+value HH
+key 00540032 SQ
+sequence-start
+sequence-end
+key 00540052 SQ
+sequence-start
+sequence-end
+key 00540080 US
+value II
+key 00540081 US
+value JJ
+key 00540410 SQ
+sequence-start
+sequence-end
+key 00540414 SQ
+sequence-start
+sequence-end
+key 00660103 OW
+value ABCDEFGH
+key 00701a07 OD
+value AZERTYUI01234567
+key 0072005e AE
+value 01234567AZERTYUI
+key 0072005f AS
+value 01234567AZERTYUI
+key 00720060 AT
+value 01234567AZERTYUI
+key 00720061 DA
+value 01234567AZERTYUI
+key 00720062 CS
+value 01234567AZERTYUI
+key 00720063 DT
+value 01234567AZERTYUI
+key 00720064 IS
+value 01234567AZERTYUI
+key 00720065 OB
+value 01234567AZERTYUI
+key 00720066 LO
+value 01234567AZERTYUI
+key 00720067 OF
+value 01234567AZERTYUI
+key 00720068 LT
+value 01234567AZERTYUI
+key 00720069 OW
+value 01234567AZERTYUI
+key 0072006a PN
+value 01234567AZERTYUI
+key 0072006b TM
+value 01234567AZERTYUI
+key 0072006c SH
+value 01234567AZERTYUI
+key 0072006d UN
+value 01234567AZERTYUI
+key 0072006e ST
+value 01234567AZERTYUI
+key 0072006f UC
+value 01234567AZERTYUI
+key 00720070 UT
+value 01234567AZERTYUI
+key 00720071 UR
+value 01234567AZERTYUI
+key 00720072 DS
+value 01234567AZERTYUI
+key 00720073 OD
+value 01234567AZERTYUI
+key 00720074 FD
+value 01234567AZERTYUI
+key 00720075 OL
+value 01234567AZERTYUI
+key 00720076 FL
+value 01234567AZERTYUI
+key 00720078 UL
+value 01234567AZERTYUI
+key 0072007a US
+value 01234567AZERTYUI
+key 0072007c SL
+value 01234567AZERTYUI
+key 0072007e SS
+value 01234567AZERTYUI
+key 0072007f UI
+value 01234567AZERTYUI
+key 00720080 SQ
+sequence-start
+sequence-end
+key 00720081 OV
+value 01234567AZERTYUI
+key 00720082 SV
+value 01234567AZERTYUI
+key 00720083 UV
+value 01234567AZERTYUI
+key 300a066b OF
+value 01234567AZERTYUI
+document-end

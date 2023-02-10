@@ -14,10 +14,18 @@ set(STRUCTURE_NAMES
     evrle_raw # little-endian
     evrbe_raw # big-endian
 )
-set(COMMON_CASES simple simple_sqi simple_empty_sqi simple_sqi_empty_item
-                 simple_nested_sqi simple_sqi_two_items)
-set(raw_CASES simple_pd)
-set(encapsulated_CASES simple_sqf simple_sqf_empty_frag simple_nested_sqf)
+set(COMMON_CASES
+    all_vrs_2023
+    dataelement
+    trailing_padding
+    sqi
+    empty_sqi
+    sqi_empty_item
+    sqi_one_item
+    sqi_two_items
+    nested_sqi)
+set(raw_CASES pixel_data)
+set(encapsulated_CASES sqf sqf_empty_frag nested_sqf)
 
 function(add_roundtrip_tests structure_name case struct_dir gold_folder
          roundtrip_folder)

@@ -248,11 +248,18 @@ static enum dicm_state
 _item_writer_write_key_explicit(struct _item_writer *self, struct dicm_dst *dst,
                                 const enum dicm_token token) {
   assert(token == TOKEN_KEY);
+#if 0
   union _ude ude;
   const bool is_vr16 = _ude_init(&ude, &self->da);
   const size_t len = is_vr16 ? 6u : 8u;
   int64_t dlen = dicm_dst_write(dst, &ude, len);
   assert(dlen == (int64_t)len);
+#else
+  const struct evr evr = _evr_init1(&self->da);
+  const size_t key_len = evr_get_key_size(evr);
+  const int64_t dlen = dicm_dst_write(dst, evr.bytes, key_len);
+  assert(dlen == (int64_t)key_len);
+#endif
   return STATE_KEY;
 }
 
