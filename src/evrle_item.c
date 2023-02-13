@@ -69,17 +69,15 @@ static inline uint32_t evrle2tag(const uint32_t tag_bytes) {
 }
 
 enum EVRLE_SPECIAL_TAGS {
-  EVRLE_TAG_PIXELDATA = SWAP_TAG(MAKE_TAG(0x7fe0, 0x0010)),
-  EVRLE_TAG_STARTITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe000)),
-  EVRLE_TAG_ENDITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe00d)),
-  EVRLE_TAG_ENDSQITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe0dd)),
+  EVRLE_TAG_STARTITEM = SWAP_TAG(TAG_STARTITEM),
+  EVRLE_TAG_ENDITEM = SWAP_TAG(TAG_ENDITEM),
+  EVRLE_TAG_ENDSQITEM = SWAP_TAG(TAG_ENDSQITEM),
 };
 
-static const struct ivr evrle_start_item = {.tag = SWAP_TAG(TAG_STARTITEM),
+static const struct ivr evrle_start_item = {.tag = EVRLE_TAG_STARTITEM,
                                             .vl = VL_UNDEFINED};
-static const struct ivr evrle_end_item = {.tag = SWAP_TAG(TAG_ENDITEM),
-                                          .vl = 0};
-static const struct ivr evrle_end_sq_item = {.tag = SWAP_TAG(TAG_ENDSQITEM),
+static const struct ivr evrle_end_item = {.tag = EVRLE_TAG_ENDITEM, .vl = 0};
+static const struct ivr evrle_end_sq_item = {.tag = EVRLE_TAG_ENDSQITEM,
                                              .vl = 0};
 
 static enum dicm_token evrle_item_reader_read_key(struct _item_reader *self,
@@ -87,7 +85,7 @@ static enum dicm_token evrle_item_reader_read_key(struct _item_reader *self,
   struct dual dual;
   int64_t ssize = dicm_src_read(src, &dual.ivr, 8);
   if (ssize != 8) {
-    return TOKEN_EOF;
+    return ssize == 0 ? TOKEN_EOF : TOKEN_INVALID_DATA;
   }
 
   const uint32_t tag = evrle2tag(dual.ivr.tag);
@@ -122,7 +120,7 @@ static enum dicm_token evrle_item_reader_read_key(struct _item_reader *self,
   } else {
     ssize = dicm_src_read(src, &dual.evr.vl32, 4);
     if (ssize != 4) {
-      return TOKEN_EOF;
+      return TOKEN_INVALID_DATA;
     }
     const uint32_t vl = dual.evr.vl32;
     self->da.vl = vl;
@@ -362,15 +360,8 @@ static struct _item_reader_vtable const evrle_item_vtable = {
 struct _item_reader
 evrle_item_reader_next_level(struct _item_reader *item_reader,
                              const enum dicm_state current_state) {
-  struct _item_reader new_item = {};
-  switch (current_state) {
-  case STATE_STARTSEQUENCE:
-    new_item.vtable = &evrle_item_vtable;
-    break;
-  default:
-    assert(0);
-  }
-
+  assert(STATE_STARTSEQUENCE == current_state);
+  struct _item_reader new_item = {.vtable = &evrle_item_vtable};
   return new_item;
 }
 
@@ -401,15 +392,8 @@ static struct _item_writer_vtable const g_evrle_item_vtable = {
 struct _item_writer
 evrle_item_writer_next_level(struct _item_writer *self,
                              const enum dicm_state current_state) {
-  struct _item_writer new_item = {};
-  switch (current_state) {
-  case STATE_STARTSEQUENCE:
-    new_item.vtable = &g_evrle_item_vtable;
-    break;
-  default:
-    assert(0);
-  }
-
+  assert(STATE_STARTSEQUENCE == current_state);
+  struct _item_writer new_item = {.vtable = &g_evrle_item_vtable};
   return new_item;
 }
 
