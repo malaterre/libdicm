@@ -244,8 +244,7 @@ evrbe_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
     dlen = dicm_dst_write(dst, evrbe_end_sq_item.bytes, 8);
     new_state = dlen == 8 ? STATE_ENDSEQUENCE : STATE_INVALID;
     break;
-  default:
-    assert(0);
+  default:;
   }
   return new_state;
 }
