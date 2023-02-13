@@ -89,6 +89,18 @@ static inline struct evr _evr_init1(const struct _attribute *da) {
   return evr;
 }
 
+static inline struct ivr _ivr_init1(const struct _attribute *da) {
+  struct ivr ivr;
+  union {
+    uint32_t t;
+    uint16_t a[2];
+  } u;
+  u.t = da->tag;
+  ivr.tag = (uint32_t)((uint32_t)u.a[0] << 16u | u.a[1]);
+  ivr.vl = da->vl;
+  return ivr;
+}
+
 static inline struct evr _evr_init2(const struct _attribute *da) {
   struct evr evr;
   evr.tag = bswap_32(da->tag);
