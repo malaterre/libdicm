@@ -7,8 +7,13 @@ set(dicm_SOURCES
     dicm_object.c
     dicm_parser.c
     dicm_src.c
-    dicm_version.c
-    evrbe_item.c)
+    dicm_version.c)
+if(DICM_ENABLE_STRUCTURE_EXPLICT_BE)
+  list(APPEND dicm_SOURCES evrbe_item.c)
+endif()
+if(DICM_ENABLE_STRUCTURE_EXPLICT_LE)
+  list(APPEND dicm_SOURCES evrle_item.c)
+endif()
 
 add_library(dicm SHARED ${dicm_SOURCES})
 set_target_properties(dicm PROPERTIES VERSION ${DICM_VERSION} SOVERSION

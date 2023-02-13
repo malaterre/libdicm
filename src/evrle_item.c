@@ -62,11 +62,27 @@ static inline bool _attribute_is_valid(const struct _attribute *da) {
 #define item_writer_value_token(t, dst, tok)                                   \
   ((t)->vtable->writer.fp_value_token((t), (dst), (tok)))
 
-static inline uint32_t evrbe2tag(const uint32_t tag_bytes) {
-  return bswap_32(tag_bytes);
+#define SWAP_TAG(x) ((((x)&0x0000ffff) << 16u) | (((x)&0xffff0000) >> 16u))
+
+static inline uint32_t evrle2tag(const uint32_t tag_bytes) {
+  return SWAP_TAG(tag_bytes);
 }
 
-static enum dicm_token evrbe_item_reader_read_key(struct _item_reader *self,
+enum EVRLE_SPECIAL_TAGS {
+  EVRLE_TAG_PIXELDATA = SWAP_TAG(MAKE_TAG(0x7fe0, 0x0010)),
+  EVRLE_TAG_STARTITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe000)),
+  EVRLE_TAG_ENDITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe00d)),
+  EVRLE_TAG_ENDSQITEM = SWAP_TAG(MAKE_TAG(0xfffe, 0xe0dd)),
+};
+
+static const struct ivr evrle_start_item = {.tag = SWAP_TAG(TAG_STARTITEM),
+                                            .vl = VL_UNDEFINED};
+static const struct ivr evrle_end_item = {.tag = SWAP_TAG(TAG_ENDITEM),
+                                          .vl = 0};
+static const struct ivr evrle_end_sq_item = {.tag = SWAP_TAG(TAG_ENDSQITEM),
+                                             .vl = 0};
+
+static enum dicm_token evrle_item_reader_read_key(struct _item_reader *self,
                                                   struct dicm_src *src) {
   struct dual dual;
   int64_t ssize = dicm_src_read(src, &dual.ivr, 8);
@@ -74,20 +90,24 @@ static enum dicm_token evrbe_item_reader_read_key(struct _item_reader *self,
     return TOKEN_EOF;
   }
 
-  const uint32_t tag = evrbe2tag(dual.ivr.tag);
+  const uint32_t tag = evrle2tag(dual.ivr.tag);
   self->da.tag = tag;
   {
-    const uint32_t ide_vl = bswap_32(dual.ivr.vl);
+    const uint32_t ide_vl = dual.ivr.vl;
     switch (tag) {
     case TAG_STARTITEM:
+      /* FIXME: no bswap needed at this point */
+      assert(dual.ivr.tag == EVRLE_TAG_STARTITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return vl_is_valid(ide_vl) ? TOKEN_STARTITEM : TOKEN_INVALID_DATA;
     case TAG_ENDITEM:
+      assert(dual.ivr.tag == EVRLE_TAG_ENDITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return ide_vl == 0 ? TOKEN_ENDITEM : TOKEN_INVALID_DATA;
     case TAG_ENDSQITEM:
+      assert(dual.ivr.tag == EVRLE_TAG_ENDSQITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return ide_vl == 0 ? TOKEN_ENDSQITEM : TOKEN_INVALID_DATA;
@@ -97,14 +117,14 @@ static enum dicm_token evrbe_item_reader_read_key(struct _item_reader *self,
   const uint32_t vr = dual.evr.vr16;
   self->da.vr = vr;
   if (_is_vr16(vr)) {
-    const uint32_t vl = bswap_16(dual.evr.vl16);
+    const uint32_t vl = dual.evr.vl16;
     self->da.vl = vl;
   } else {
     ssize = dicm_src_read(src, &dual.evr.vl32, 4);
     if (ssize != 4) {
       return TOKEN_EOF;
     }
-    const uint32_t vl = bswap_32(dual.evr.vl32);
+    const uint32_t vl = dual.evr.vl32;
     self->da.vl = vl;
   }
 
@@ -116,7 +136,7 @@ static enum dicm_token evrbe_item_reader_read_key(struct _item_reader *self,
   return TOKEN_KEY;
 }
 
-static enum dicm_token evrbe_item_reader_read_value(struct _item_reader *self,
+static enum dicm_token evrle_item_reader_read_value(struct _item_reader *self,
                                                     struct dicm_src *src) {
   assert(src);
   const dicm_vr_t vr = self->da.vr;
@@ -130,7 +150,7 @@ static enum dicm_token evrbe_item_reader_read_value(struct _item_reader *self,
 }
 
 static enum dicm_state
-evrbe_ds_reader_next_event(struct _item_reader *self,
+evrle_ds_reader_next_event(struct _item_reader *self,
                            const enum dicm_state current_state,
                            struct dicm_src *src) {
   enum dicm_token next;
@@ -166,7 +186,7 @@ evrbe_ds_reader_next_event(struct _item_reader *self,
 }
 
 static enum dicm_state
-evrbe_item_reader_next_event(struct _item_reader *self,
+evrle_item_reader_next_event(struct _item_reader *self,
                              const enum dicm_state current_state,
                              struct dicm_src *src) {
   enum dicm_token next;
@@ -203,39 +223,29 @@ evrbe_item_reader_next_event(struct _item_reader *self,
   return new_state;
 }
 
-#define BSWAP32(x)                                                             \
-  ((((x)&0x000000ff) << 24) | (((x)&0x0000ff00) << 8) |                        \
-   (((x)&0x00ff0000) >> 8) | (((x)&0xff000000) >> 24))
-
-static const struct ivr evrbe_start_item = {.tag = BSWAP32(TAG_STARTITEM),
-                                            .vl = VL_UNDEFINED};
-static const struct ivr evrbe_end_item = {.tag = BSWAP32(TAG_ENDITEM), .vl = 0};
-static const struct ivr evrbe_end_sq_item = {.tag = BSWAP32(TAG_ENDSQITEM),
-                                             .vl = 0};
-
 static enum dicm_state
-evrbe_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
+evrle_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
                             const enum dicm_token token) {
   enum dicm_state new_state = STATE_INVALID;
   int64_t dlen;
   switch (token) {
   case TOKEN_KEY: {
-    const struct evr evr = _evr_init2(&self->da);
+    const struct evr evr = _evr_init1(&self->da);
     const size_t key_size = evr_get_key_size(evr);
     dlen = dicm_dst_write(dst, evr.bytes, key_size);
     new_state = dlen == (int64_t)key_size ? STATE_KEY : STATE_INVALID;
   } break;
   case TOKEN_STARTITEM:
     /* FIXME: only undef sequence for now */
-    dlen = dicm_dst_write(dst, evrbe_start_item.bytes, 8);
+    dlen = dicm_dst_write(dst, evrle_start_item.bytes, 8);
     new_state = dlen == 8 ? STATE_STARTITEM : STATE_INVALID;
     break;
   case TOKEN_ENDITEM:
-    dlen = dicm_dst_write(dst, evrbe_end_item.bytes, 8);
+    dlen = dicm_dst_write(dst, evrle_end_item.bytes, 8);
     new_state = dlen == 8 ? STATE_ENDITEM : STATE_INVALID;
     break;
   case TOKEN_ENDSQITEM:
-    dlen = dicm_dst_write(dst, evrbe_end_sq_item.bytes, 8);
+    dlen = dicm_dst_write(dst, evrle_end_sq_item.bytes, 8);
     new_state = dlen == 8 ? STATE_ENDSEQUENCE : STATE_INVALID;
     break;
   default:
@@ -244,18 +254,18 @@ evrbe_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
   return new_state;
 }
 
-static enum dicm_state evrbe_item_writer_write_vl(struct _item_writer *self,
+static enum dicm_state evrle_item_writer_write_vl(struct _item_writer *self,
                                                   struct dicm_dst *dst,
                                                   const enum dicm_token token) {
   assert(token == TOKEN_VALUE);
-  const struct evr evr = _evr_init2(&self->da);
+  const struct evr evr = _evr_init1(&self->da);
   const size_t vl_len = evr.vr_size;
   const int64_t dlen = dicm_dst_write(dst, &evr.vl, vl_len);
   return dlen == (int64_t)vl_len ? STATE_VALUE : STATE_INVALID;
 }
 
 static enum dicm_state
-evrbe_item_writer_write_value(struct _item_writer *self, struct dicm_dst *dst,
+evrle_item_writer_write_value(struct _item_writer *self, struct dicm_dst *dst,
                               const enum dicm_token token) {
   assert(token == TOKEN_VALUE || TOKEN_STARTSEQUENCE);
   enum dicm_state new_state = STATE_INVALID;
@@ -268,7 +278,7 @@ evrbe_item_writer_write_value(struct _item_writer *self, struct dicm_dst *dst,
     /* update internal state */
     self->da.vl = VL_UNDEFINED;
     /* write to dest */
-    dlen = dicm_dst_write(dst, &evrbe_start_item.vl, 4);
+    dlen = dicm_dst_write(dst, &evrle_start_item.vl, 4);
     new_state = dlen == 4 ? STATE_STARTSEQUENCE : STATE_INVALID;
     break;
   default:;
@@ -277,7 +287,7 @@ evrbe_item_writer_write_value(struct _item_writer *self, struct dicm_dst *dst,
   return new_state;
 }
 
-static enum dicm_state evrbe_ds_writer_next_event(
+static enum dicm_state evrle_ds_writer_next_event(
     struct _item_writer *self, const enum dicm_state current_state,
     struct dicm_dst *dst, const enum dicm_event_type next) {
   const enum dicm_token token = event2token(next);
@@ -306,7 +316,7 @@ static enum dicm_state evrbe_ds_writer_next_event(
   return new_state;
 }
 
-static enum dicm_state evrbe_item_writer_next_event(
+static enum dicm_state evrle_item_writer_next_event(
     struct _item_writer *self, const enum dicm_state current_state,
     struct dicm_dst *dst, const enum dicm_event_type next) {
   const enum dicm_token token = event2token(next);
@@ -314,8 +324,6 @@ static enum dicm_state evrbe_item_writer_next_event(
   switch (current_state) {
   case STATE_STARTSEQUENCE:
   case STATE_ENDITEM:
-    /* hint: change API to take the event directly and return the token ... to
-     * repeat the parser implementatoin */
     new_state = item_writer_key_token(self, dst, token);
     assert(new_state == STATE_STARTITEM || new_state == STATE_ENDSEQUENCE);
     break;
@@ -335,29 +343,29 @@ static enum dicm_state evrbe_item_writer_next_event(
 }
 
 static struct _item_reader
-evrbe_item_reader_next_level(struct _item_reader *item_reader,
+evrle_item_reader_next_level(struct _item_reader *item_reader,
                              const enum dicm_state current_state);
 
-static struct _item_reader_vtable const evrbe_ds_vtable = {
+static struct _item_reader_vtable const evrle_ds_vtable = {
     /* ds reader interface */
-    .reader = {.fp_key_token = evrbe_item_reader_read_key,
-               .fp_value_token = evrbe_item_reader_read_value,
-               .fp_next_level = evrbe_item_reader_next_level,
-               .fp_next_event = evrbe_ds_reader_next_event}};
-static struct _item_reader_vtable const evrbe_item_vtable = {
+    .reader = {.fp_key_token = evrle_item_reader_read_key,
+               .fp_value_token = evrle_item_reader_read_value,
+               .fp_next_level = evrle_item_reader_next_level,
+               .fp_next_event = evrle_ds_reader_next_event}};
+static struct _item_reader_vtable const evrle_item_vtable = {
     /* item reader interface */
-    .reader = {.fp_key_token = evrbe_item_reader_read_key,
-               .fp_value_token = evrbe_item_reader_read_value,
-               .fp_next_level = evrbe_item_reader_next_level,
-               .fp_next_event = evrbe_item_reader_next_event}};
+    .reader = {.fp_key_token = evrle_item_reader_read_key,
+               .fp_value_token = evrle_item_reader_read_value,
+               .fp_next_level = evrle_item_reader_next_level,
+               .fp_next_event = evrle_item_reader_next_event}};
 
 struct _item_reader
-evrbe_item_reader_next_level(struct _item_reader *item_reader,
+evrle_item_reader_next_level(struct _item_reader *item_reader,
                              const enum dicm_state current_state) {
   struct _item_reader new_item = {};
   switch (current_state) {
   case STATE_STARTSEQUENCE:
-    new_item.vtable = &evrbe_item_vtable;
+    new_item.vtable = &evrle_item_vtable;
     break;
   default:
     assert(0);
@@ -366,37 +374,37 @@ evrbe_item_reader_next_level(struct _item_reader *item_reader,
   return new_item;
 }
 
-struct _item_reader get_new_evrbe_reader_ds() {
-  struct _item_reader new_item = {.vtable = &evrbe_ds_vtable};
+struct _item_reader get_new_evrle_reader_ds() {
+  struct _item_reader new_item = {.vtable = &evrle_ds_vtable};
   return new_item;
 }
 
 static struct _item_writer
-evrbe_item_writer_next_level(struct _item_writer *self,
+evrle_item_writer_next_level(struct _item_writer *self,
                              const enum dicm_state current_state);
 
-static struct _item_writer_vtable const g_evrbe_root_vtable = {
+static struct _item_writer_vtable const g_evrle_root_vtable = {
     /* ds writer interface */
-    .writer = {.fp_key_token = evrbe_item_writer_write_key,
-               .fp_vl_token = evrbe_item_writer_write_vl,
-               .fp_value_token = evrbe_item_writer_write_value,
-               .fp_next_level = evrbe_item_writer_next_level,
-               .fp_next_event = evrbe_ds_writer_next_event}};
-static struct _item_writer_vtable const g_evrbe_item_vtable = {
+    .writer = {.fp_key_token = evrle_item_writer_write_key,
+               .fp_vl_token = evrle_item_writer_write_vl,
+               .fp_value_token = evrle_item_writer_write_value,
+               .fp_next_level = evrle_item_writer_next_level,
+               .fp_next_event = evrle_ds_writer_next_event}};
+static struct _item_writer_vtable const g_evrle_item_vtable = {
     /* item writer interface */
-    .writer = {.fp_key_token = evrbe_item_writer_write_key,
-               .fp_vl_token = evrbe_item_writer_write_vl,
-               .fp_value_token = evrbe_item_writer_write_value,
-               .fp_next_level = evrbe_item_writer_next_level,
-               .fp_next_event = evrbe_item_writer_next_event}};
+    .writer = {.fp_key_token = evrle_item_writer_write_key,
+               .fp_vl_token = evrle_item_writer_write_vl,
+               .fp_value_token = evrle_item_writer_write_value,
+               .fp_next_level = evrle_item_writer_next_level,
+               .fp_next_event = evrle_item_writer_next_event}};
 
 struct _item_writer
-evrbe_item_writer_next_level(struct _item_writer *self,
+evrle_item_writer_next_level(struct _item_writer *self,
                              const enum dicm_state current_state) {
   struct _item_writer new_item = {};
   switch (current_state) {
   case STATE_STARTSEQUENCE:
-    new_item.vtable = &g_evrbe_item_vtable;
+    new_item.vtable = &g_evrle_item_vtable;
     break;
   default:
     assert(0);
@@ -405,7 +413,7 @@ evrbe_item_writer_next_level(struct _item_writer *self,
   return new_item;
 }
 
-void evrbe_init_item_writer(struct _item_writer *new_item) {
+void evrle_init_item_writer(struct _item_writer *new_item) {
   assert(new_item->da.tag == 0x0);
-  new_item->vtable = &g_evrbe_root_vtable;
+  new_item->vtable = &g_evrle_root_vtable;
 }
