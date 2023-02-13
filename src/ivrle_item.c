@@ -12,42 +12,15 @@ static inline bool _tag_is_valid(const dicm_tag_t tag) {
   return dicm_tag_get_group(tag) >= 0x0008;
 }
 
-static inline bool _tag_is_creator(const dicm_tag_t tag) {
-  const uint_fast16_t element = dicm_tag_get_element(tag);
-  return dicm_tag_is_private(tag) && (element > 0x0 && element <= 0xff);
-}
-
-static inline bool _vr_is_valid(const dicm_vr_t vr) {
-  if ((vr & 0xffff0000) != 0x0) {
-    return false;
-  }
-  const char *str = dicm_vr_get_string(vr);
-  return str[0] >= 'A' && str[0] <= 'Z' && str[1] >= 'A' && str[1] <= 'Z';
-}
-
 static inline bool vl_is_valid(const dicm_vl_t vl) {
   return dicm_vl_is_undefined(vl) || vl % 2 == 0;
 }
 
 static inline bool _attribute_is_valid(const struct _attribute *da) {
   // 1. check triplet separately:
-  const bool valid =
-      _tag_is_valid(da->tag) && _vr_is_valid(da->vr) && vl_is_valid(da->vl);
+  const bool valid = _tag_is_valid(da->tag) && vl_is_valid(da->vl);
   if (!valid) {
     return false;
-  }
-  // 2. handle finer cases here:
-  if (dicm_vl_is_undefined(da->vl) && da->vr != VR_SQ) {
-    if (!dicm_attribute_is_encapsulated_pixel_data(da)) {
-      return false;
-    }
-  }
-  if (dicm_tag_is_group_length(da->tag)) {
-    if (da->vr != VR_UL)
-      return false;
-  } else if (_tag_is_creator(da->tag)) {
-    if (da->vr != VR_LO)
-      return false;
   }
   return true;
 }
@@ -64,7 +37,7 @@ static inline bool _attribute_is_valid(const struct _attribute *da) {
 
 #define SWAP_TAG(x) ((((x)&0x0000ffff) << 16u) | (((x)&0xffff0000) >> 16u))
 
-static inline uint32_t evrle2tag(const uint32_t tag_bytes) {
+static inline uint32_t ivrle2tag(const uint32_t tag_bytes) {
   return SWAP_TAG(tag_bytes);
 }
 
@@ -82,45 +55,42 @@ static const struct ivr ivrle_end_sq_item = {.tag = IVRLE_TAG_ENDSQITEM,
 
 static enum dicm_token ivrle_item_reader_read_key(struct _item_reader *self,
                                                   struct dicm_src *src) {
-  union _ude ude;
-  _Static_assert(16 == sizeof(ude), "16 bytes");
-  _Static_assert(12 == sizeof(struct _ede32), "12 bytes");
-  _Static_assert(8 == sizeof(struct _ede16), "8 bytes");
-  _Static_assert(8 == sizeof(struct _ide), "8 bytes");
-  int64_t ssize = dicm_src_read(src, ude.bytes, 8);
+  struct dual dual;
+  int64_t ssize = dicm_src_read(src, &dual.ivr, 8);
   if (ssize != 8) {
     return ssize == 0 ? TOKEN_EOF : TOKEN_INVALID_DATA;
   }
 
+  const uint32_t tag = ivrle2tag(dual.ivr.tag);
+  self->da.tag = tag;
   {
-    const dicm_tag_t tag = _ide_get_tag(&ude);
-    self->da.tag = tag;
-    const dicm_vl_t ide_vl = _ide_get_vl(&ude);
+    const uint32_t ide_vl = dual.ivr.vl;
     self->da.vl = ide_vl;
     self->da.vr = VR_NONE;
     switch (tag) {
     case TAG_STARTITEM:
+      /* FIXME: no bswap needed at this point */
+      assert(dual.ivr.tag == IVRLE_TAG_STARTITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return vl_is_valid(ide_vl) ? TOKEN_STARTITEM : TOKEN_INVALID_DATA;
     case TAG_ENDITEM:
+      assert(dual.ivr.tag == IVRLE_TAG_ENDITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return ide_vl == 0 ? TOKEN_ENDITEM : TOKEN_INVALID_DATA;
     case TAG_ENDSQITEM:
+      assert(dual.ivr.tag == IVRLE_TAG_ENDSQITEM);
       self->da.vr = VR_NONE;
       self->da.vl = ide_vl;
       return ide_vl == 0 ? TOKEN_ENDSQITEM : TOKEN_INVALID_DATA;
     }
   }
 
-#if 0
-  // FIXME TODO
   if (!_attribute_is_valid(&self->da)) {
     assert(0);
     return TOKEN_INVALID_DATA;
   }
-#endif
 
   return TOKEN_KEY;
 }
@@ -219,10 +189,8 @@ ivrle_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
   int64_t dlen;
   switch (token) {
   case TOKEN_KEY: {
-    union _ude ude;
-    _ide_set_tag(&ude, self->da.tag);
-    int64_t dlen = dicm_dst_write(dst, &ude.ide, 4);
-    assert(dlen == 4);
+    const struct ivr ivr = _ivr_init1(&self->da);
+    dlen = dicm_dst_write(dst, ivr.bytes, 4);
     new_state = dlen == 4 ? STATE_KEY : STATE_INVALID;
   } break;
   case TOKEN_STARTITEM:
@@ -248,12 +216,9 @@ static enum dicm_state ivrle_item_writer_write_vl(struct _item_writer *self,
                                                   struct dicm_dst *dst,
                                                   const enum dicm_token token) {
   assert(token == TOKEN_VALUE);
-  union _ude ude;
   const size_t vl_len = 4u;
-  const uint32_t s = self->da.vl;
-  int64_t dlen;
-  _ede32_set_vl(&ude, s);
-  dlen = dicm_dst_write(dst, &ude.ede32.vl, vl_len);
+  const struct ivr ivr = _ivr_init1(&self->da);
+  const int64_t dlen = dicm_dst_write(dst, &ivr.vl, vl_len);
   assert(dlen == (int64_t)vl_len);
 
   return dlen == (int64_t)vl_len ? STATE_VALUE : STATE_INVALID;

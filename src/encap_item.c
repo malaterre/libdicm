@@ -266,6 +266,7 @@ encap_item_writer_write_key(struct _item_writer *self, struct dicm_dst *dst,
 static enum dicm_state encap_item_writer_write_vl(struct _item_writer *self,
                                                   struct dicm_dst *dst,
                                                   const enum dicm_token token) {
+  /* FIXME one step key + vl */
   assert(token == TOKEN_VALUE);
   const struct evr evr = _evr_init1(&self->da);
   const size_t vl_len = evr.vr_size;
@@ -447,7 +448,6 @@ encap_frag_writer_write_value(struct _item_writer *self, struct dicm_dst *dst,
                               const enum dicm_token token) {
   assert(token == TOKEN_VALUE);
   enum dicm_state new_state = STATE_INVALID;
-  int64_t dlen;
   switch (token) {
   case TOKEN_VALUE:
     new_state = STATE_VALUE;
@@ -469,11 +469,9 @@ static enum dicm_state encap_frag_writer_next_event(
     new_state = item_writer_key_token(self, dst, token);
     break;
   case STATE_FRAGMENT:
-    assert(token == TOKEN_VALUE);
-    new_state = STATE_VALUE;
+    new_state = item_writer_value_token(self, dst, token);
     break;
-  default:
-    assert(0);
+  default:;
   }
   return new_state;
 }
