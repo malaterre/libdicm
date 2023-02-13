@@ -559,16 +559,16 @@ _item_writer_next_event(struct _item_writer *self,
   return new_state;
 }
 
-enum dicm_token _fragments_reader_next_impl2(struct _item_reader *self,
-                                             struct dicm_src *src) {
+static enum dicm_token _fragments_reader_next_impl2(struct _item_reader *self,
+                                                    struct dicm_src *src) {
   assert(src);
   const dicm_vr_t vr = self->da.vr;
   assert(vr == VR_NONE);
   return TOKEN_VALUE;
 }
 
-enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
-                                            struct dicm_src *src) {
+static enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
+                                                   struct dicm_src *src) {
   const enum dicm_token next = _item_reader_next_impl(self, src);
   return next == TOKEN_STARTITEM ? TOKEN_FRAGMENT : next;
 }
@@ -579,7 +579,7 @@ enum dicm_token _fragments_reader_next_impl(struct _item_reader *self,
  * and exit in state:
  * - STATE_ENDSEQUENCE
  */
-enum dicm_state
+static enum dicm_state
 _fragments_reader_next_event(struct _item_reader *self,
                              const enum dicm_state current_state,
                              struct dicm_src *src) {
@@ -608,9 +608,9 @@ _fragments_reader_next_event(struct _item_reader *self,
   return new_state;
 }
 
-enum dicm_state _fragments_writer_key_token(struct _item_writer *self,
-                                            struct dicm_dst *dst,
-                                            const enum dicm_token token) {
+static enum dicm_state
+_fragments_writer_key_token(struct _item_writer *self, struct dicm_dst *dst,
+                            const enum dicm_token token) {
   assert(self);
   assert(token >= 0);
   enum dicm_state ret = STATE_INVALID;
@@ -636,7 +636,7 @@ enum dicm_state _fragments_writer_key_token(struct _item_writer *self,
   return ret;
 }
 
-enum dicm_state _fragments_writer_next_event(
+static enum dicm_state _fragments_writer_next_event(
     struct _item_writer *self, const enum dicm_state current_state,
     struct dicm_dst *dst, const enum dicm_event_type next) {
   const enum dicm_token token = event2token(next);
@@ -728,11 +728,6 @@ struct _item_reader get_new_reader_ds() {
 
 struct _item_reader get_new_implicit_reader_ds() {
   struct _item_reader new_item = {.vtable = &si_ds_vtable};
-  return new_item;
-}
-
-struct _item_reader get_new_explicit_reader_ds() {
-  struct _item_reader new_item = {.vtable = &se_ds_vtable};
   return new_item;
 }
 
@@ -829,8 +824,4 @@ void encap_init_item_writer(struct _item_writer *new_item) {
 void ivrle_init_item_writer(struct _item_writer *new_item) {
   assert(new_item->da.tag == 0x0);
   new_item->vtable = &g_ds_imp_vtable;
-}
-void evrle_init_item_writer(struct _item_writer *new_item) {
-  assert(new_item->da.tag == 0x0);
-  new_item->vtable = &g_ds_exp_vtable;
 }
