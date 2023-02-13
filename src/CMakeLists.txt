@@ -8,6 +8,9 @@ set(dicm_SOURCES
     dicm_parser.c
     dicm_src.c
     dicm_version.c)
+if(DICM_ENABLE_STRUCTURE_ENCAPSULATED)
+  list(APPEND dicm_SOURCES encap_item.c)
+endif()
 if(DICM_ENABLE_STRUCTURE_EXPLICT_BE)
   list(APPEND dicm_SOURCES evrbe_item.c)
 endif()
