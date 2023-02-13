@@ -14,6 +14,9 @@ endif()
 if(DICM_ENABLE_STRUCTURE_EXPLICT_LE)
   list(APPEND dicm_SOURCES evrle_item.c)
 endif()
+if(DICM_ENABLE_STRUCTURE_IMPLICT)
+  list(APPEND dicm_SOURCES ivrle_item.c)
+endif()
 
 add_library(dicm SHARED ${dicm_SOURCES})
 set_target_properties(dicm PROPERTIES VERSION ${DICM_VERSION} SOVERSION

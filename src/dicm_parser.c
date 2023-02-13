@@ -89,7 +89,7 @@ int _parser_get_value_length(struct dicm_parser *const self, uint32_t *len) {
 }
 
 struct _item_reader get_new_reader_ds();
-struct _item_reader get_new_implicit_reader_ds();
+struct _item_reader get_new_ivrle_reader_ds();
 struct _item_reader get_new_evrle_reader_ds();
 struct _item_reader get_new_evrbe_reader_ds();
 struct _item_reader get_new_reader_item();
@@ -113,7 +113,7 @@ push_ds_implicit_reader(struct _parser *parser,
   parser->current_item_state = current_state;
 
   parser->value_length_pos = VL_UNDEFINED;
-  struct _item_reader new_item = get_new_implicit_reader_ds();
+  struct _item_reader new_item = get_new_ivrle_reader_ds();
   array_push(parser->item_readers, new_item);
   assert(is_root_dataset(parser));
 }

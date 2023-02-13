@@ -726,11 +726,6 @@ struct _item_reader get_new_reader_ds() {
   return new_item;
 }
 
-struct _item_reader get_new_implicit_reader_ds() {
-  struct _item_reader new_item = {.vtable = &si_ds_vtable};
-  return new_item;
-}
-
 struct _item_reader get_new_reader_item() {
   struct _item_reader new_item = {.vtable = &se_item_vtable};
   return new_item;
@@ -820,8 +815,4 @@ _item_next_level_implicit(struct _item_writer *self,
 void encap_init_item_writer(struct _item_writer *new_item) {
   assert(new_item->da.tag == 0x0);
   new_item->vtable = &g_ds_vtable;
-}
-void ivrle_init_item_writer(struct _item_writer *new_item) {
-  assert(new_item->da.tag == 0x0);
-  new_item->vtable = &g_ds_imp_vtable;
 }
