@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
   } else {
     instream = fopen(argv[1], "rb");
     outstream = fopen(argv[2], "wb");
-    dicm_src_stream_create(&src, instream, my_read);
-    dicm_dst_stream_create(&dst, outstream, my_write);
+    dicm_src_stream_create(&src, instream, my_read, NULL);
+    dicm_dst_stream_create(&dst, outstream, my_write, NULL);
   }
 
   if (dicm_parser_create(&parser) < 0) {

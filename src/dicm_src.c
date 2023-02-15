@@ -13,11 +13,11 @@ struct file {
   FILE *stream;
 };
 
-static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int64_t file_read(struct dicm_src *, void *,
-                                           size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int64_t file_seek(struct dicm_src *, int64_t,
-                                           int) DICM_NONNULL;
+static DICM_CHECK_RETURN int file_destroy(struct object *) DICM_NONNULL();
+static DICM_CHECK_RETURN int64_t file_read(struct dicm_src *, void *, size_t)
+    DICM_NONNULL();
+static DICM_CHECK_RETURN int64_t file_seek(struct dicm_src *, int64_t, int)
+    DICM_NONNULL();
 
 static struct dicm_src_vtable const g_file_vtable = {
     .obj = {.fp_destroy = file_destroy},
@@ -45,6 +45,7 @@ int file_destroy(struct object *obj) {
 int64_t file_read(struct dicm_src *const src, void *buf, size_t size) {
   assert(size <= DICM_SIZE_MAX);
   struct file *self = (struct file *)src;
+  assert(is_aligned(buf, 4));
   const size_t read = fread(buf, 1, size, self->stream);
   /* fread() does not distinguish between end-of-file and error, and callers
    * must use feof(3) and ferror(3) to determine which occurred. */
@@ -117,11 +118,11 @@ struct mem {
   const void *end;
 };
 
-static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL;
-static DICM_CHECK_RETURN int64_t mem_read(struct dicm_src *, void *,
-                                          size_t) DICM_NONNULL;
-static DICM_CHECK_RETURN int64_t mem_seek(struct dicm_src *, int64_t,
-                                          int) DICM_NONNULL;
+static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL();
+static DICM_CHECK_RETURN int64_t mem_read(struct dicm_src *, void *, size_t)
+    DICM_NONNULL();
+static DICM_CHECK_RETURN int64_t mem_seek(struct dicm_src *, int64_t, int)
+    DICM_NONNULL();
 
 static struct dicm_src_vtable const g_mem_vtable = {
     .obj = {.fp_destroy = mem_destroy},
@@ -135,6 +136,7 @@ int mem_destroy(struct object *obj) {
 
 int64_t mem_read(struct dicm_src *const src, void *buf, size_t size) {
   struct mem *self = (struct mem *)src;
+  assert(is_aligned(buf, 4));
   const ptrdiff_t diff = self->end - self->cur;
   assert(diff >= 0);
   if ((size_t)diff >= size) {
@@ -182,7 +184,7 @@ int dicm_src_mem_create(struct dicm_src **pself, const void *ptr, size_t size) {
   return -1;
 }
 
-static DICM_CHECK_RETURN int user_destroy(struct object *) DICM_NONNULL;
+static DICM_CHECK_RETURN int user_destroy(struct object *) DICM_NONNULL();
 int user_destroy(struct object *obj) {
   struct dicm_src_user *self = (struct dicm_src_user *)obj;
   struct dicm_src_vtable *vtable = (struct dicm_src_vtable *)self->super.vtable;
@@ -220,11 +222,8 @@ src_user_create(struct dicm_src **pself, void *data,
 
 int dicm_src_stream_create(struct dicm_src **pself, void *data,
                            int64_t (*fp_read)(struct dicm_src *, void *,
-                                              size_t)) {
-  return src_user_create(pself, data, fp_read, NULL);
-}
-int dicm_src_user_create(struct dicm_src **pself, void *data,
-                         int64_t (*fp_read)(struct dicm_src *, void *, size_t),
-                         int64_t (*fp_seek)(struct dicm_src *, int64_t, int)) {
+                                              size_t),
+                           int64_t (*fp_seek)(struct dicm_src *, int64_t,
+                                              int)) {
   return src_user_create(pself, data, fp_read, fp_seek);
 }

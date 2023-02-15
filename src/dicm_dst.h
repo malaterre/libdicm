@@ -6,10 +6,10 @@
 #include <stddef.h> /* size_t */
 
 struct dst_prv_vtable {
-  DICM_CHECK_RETURN int64_t (*fp_write)(struct dicm_dst *, const void *,
-                                        size_t) DICM_NONNULL;
-  DICM_CHECK_RETURN int64_t (*fp_seek)(struct dicm_dst *, int64_t,
-                                       int) DICM_NONNULL;
+  DICM_CHECK_RETURN int64_t (*fp_write)(struct dicm_dst *, const void *, size_t)
+      DICM_NONNULL();
+  DICM_CHECK_RETURN int64_t (*fp_seek)(struct dicm_dst *, int64_t, int)
+      DICM_NONNULL();
 };
 
 struct dicm_dst_vtable {

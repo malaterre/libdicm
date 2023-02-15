@@ -6,10 +6,10 @@
 #include <string.h>    /* strlen */
 
 struct logging {
-  void (*fp_msg)(int, const char *) DICM_NONNULL;
+  void (*fp_msg)(int, const char *) DICM_NONNULL();
 };
 
-static void _default_log_msg(int, const char *) DICM_NONNULL;
+static void _default_log_msg(int, const char *) DICM_NONNULL();
 
 static _Atomic struct logging global_log = {
     /* log interface */

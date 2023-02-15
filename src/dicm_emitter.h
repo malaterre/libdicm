@@ -11,35 +11,35 @@ struct emitter_prv_vtable {
 #if 0
   /* kKey */
   DICM_CHECK_RETURN int (*fp_write_key)(struct dicm_emitter *,
-                                        const struct dicm_key *) DICM_NONNULL;
+                                        const struct dicm_key *) DICM_NONNULL();
 
   /* kValue: valid for both attribute and fragment */
   DICM_CHECK_RETURN int (*fp_write_value_length)(struct dicm_emitter *,
-                                                 const size_t *) DICM_NONNULL;
+                                                 const size_t *) DICM_NONNULL();
   DICM_CHECK_RETURN int (*fp_write_value)(struct dicm_emitter *, const void *,
-                                          size_t) DICM_NONNULL;
+                                          size_t) DICM_NONNULL();
 
   /* kFragment */
   DICM_CHECK_RETURN int (*fp_write_fragment)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
 
   /* kItem */
   DICM_CHECK_RETURN int (*fp_write_start_item)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
   DICM_CHECK_RETURN int (*fp_write_end_item)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
 
   /* kSequence: valid for SQ and Pixel Data,OB,u/l */
   DICM_CHECK_RETURN int (*fp_write_start_sequence)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
   DICM_CHECK_RETURN int (*fp_write_end_sequence)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
 
   /* We need a start model to implement easy conversion to XML */
   DICM_CHECK_RETURN int (*fp_write_start_document)(struct dicm_emitter *,
-                                                   const char *) DICM_NONNULL;
+                                                   const char *) DICM_NONNULL();
   DICM_CHECK_RETURN int (*fp_write_end_document)(struct dicm_emitter *)
-      DICM_NONNULL;
+      DICM_NONNULL();
 #endif
 };
 
