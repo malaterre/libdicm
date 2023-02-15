@@ -135,7 +135,8 @@ struct _item_reader_prv_vtable {
 
   /* return next level emitter */
   struct _item_reader (*fp_next_level)(struct _item_reader *self,
-                                       enum dicm_state new_state) DICM_NONNULL;
+                                       enum dicm_state new_state)
+      DICM_NONNULL();
 };
 struct _item_reader_vtable {
   struct _item_reader_prv_vtable const reader;
@@ -169,7 +170,8 @@ struct _item_writer_prv_vtable {
 
   /* return next level emitter */
   struct _item_writer (*fp_next_level)(struct _item_writer *self,
-                                       enum dicm_state new_state) DICM_NONNULL;
+                                       enum dicm_state new_state)
+      DICM_NONNULL();
 };
 struct _item_writer_vtable {
   struct _item_writer_prv_vtable const writer;

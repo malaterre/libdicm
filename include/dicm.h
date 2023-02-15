@@ -15,11 +15,24 @@
 #ifdef __GNUC__
 #define DICM_DECLARE(type) __attribute__((visibility("default"))) type
 #define DICM_CHECK_RETURN __attribute__((__warn_unused_result__))
-#define DICM_NONNULL __attribute__((nonnull))
+
+#define DICM_ATTRIBUTE1(a) __attribute__((a))
+#define DICM_ATTRIBUTE2(a, b) __attribute__((a(b)))
+#define DICM_ATTRIBUTE3(a, b, c) __attribute__((a(b, c)))
+#define DICM_ATTRIBUTE4(a, b, c, d) __attribute__((a(b, c, d)))
+
+#define EXPAND(x) x
+#define GET_MACRO(_1, _2, _3, _4, NAME, ...) NAME
+#define DICM_ATTRIBUTE(...)                                                    \
+  EXPAND(GET_MACRO(__VA_ARGS__, DICM_ATTRIBUTE4, DICM_ATTRIBUTE3,              \
+                   DICM_ATTRIBUTE2, DICM_ATTRIBUTE1)(__VA_ARGS__))
+
+#define DICM_NONNULL(...) DICM_ATTRIBUTE(nonnull, __VA_ARGS__)
+
 #else
 #define DICM_DECLARE(type) __declspec(dllexport) type
 #define DICM_CHECK_RETURN
-#define DICM_NONNULL
+#define DICM_NONNULL(...)
 #endif
 
 /** @} */
@@ -53,7 +66,7 @@ dicm_get_version_string(void);
  */
 
 DICM_DECLARE(void)
-dicm_get_version_numbers(int *major, int *minor, int *patch) DICM_NONNULL;
+dicm_get_version_numbers(int *major, int *minor, int *patch) DICM_NONNULL();
 
 /** @} */
 
@@ -68,7 +81,7 @@ dicm_get_version_numbers(int *major, int *minor, int *patch) DICM_NONNULL;
  * @param[in]      self   An object.
  */
 DICM_DECLARE(int)
-dicm_delete(void *self) DICM_NONNULL;
+dicm_delete(void *self) DICM_NONNULL();
 
 /** @} */
 
@@ -87,7 +100,7 @@ enum dicm_log_level_type {
 };
 
 DICM_DECLARE(void)
-dicm_configure_log_msg(void (*fp_msg)(int, const char *)) DICM_NONNULL;
+dicm_configure_log_msg(void (*fp_msg)(int, const char *)) DICM_NONNULL();
 
 /** @} */
 
@@ -111,27 +124,22 @@ struct dicm_src_user {
 /* stream or file */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_src_file_create(struct dicm_src **pself, FILE *stream) DICM_NONNULL;
+dicm_src_file_create(struct dicm_src **pself, FILE *stream) DICM_NONNULL();
 
-/* buffer */
+/* buffer - simple contiguous buffer*/
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_src_mem_create(struct dicm_src **pself, const void *ptr,
-                    size_t size) DICM_NONNULL;
+dicm_src_mem_create(struct dicm_src **pself, const void *ptr, size_t size)
+    DICM_NONNULL();
 
-/* like user defined but non-seekable */
+/* user-defined stream to specify a non-seekable stream pass in a NULL fp_seek
+ * function pointer*/
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_src_stream_create(struct dicm_src **pself, void *data,
-                       int64_t (*fp_read)(struct dicm_src *, void *,
-                                          size_t)) DICM_NONNULL;
-/* user-defined */
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_src_user_create(struct dicm_src **pself, void *data,
-                     int64_t (*fp_read)(struct dicm_src *, void *, size_t),
-                     int64_t (*fp_seek)(struct dicm_src *, int64_t,
-                                        int)) DICM_NONNULL;
+                       int64_t (*fp_read)(struct dicm_src *, void *, size_t),
+                       int64_t (*fp_seek)(struct dicm_src *, int64_t, int))
+    DICM_NONNULL(1, 2, 3);
 
 struct dicm_dst_vtable;
 struct dicm_dst {
@@ -147,29 +155,23 @@ struct dicm_dst_user {
 /* stream or file */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_dst_file_create(struct dicm_dst **pself, FILE *stream) DICM_NONNULL;
+dicm_dst_file_create(struct dicm_dst **pself, FILE *stream) DICM_NONNULL();
 
-/* buffer */
+/* buffer - simple contiguous buffer*/
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_dst_mem_create(struct dicm_dst **pself, void *ptr,
-                    size_t size) DICM_NONNULL;
+dicm_dst_mem_create(struct dicm_dst **pself, void *ptr, size_t size)
+    DICM_NONNULL();
 
-/* like user-defined but non-seekable*/
+/* user-defined stream to specify a non-seekable stream pass in a NULL fp_seek
+ * function pointer*/
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_dst_stream_create(struct dicm_dst **pself, void *data,
                        int64_t (*fp_write)(struct dicm_dst *, const void *,
-                                           size_t)) DICM_NONNULL;
-
-/* user-defined */
-DICM_CHECK_RETURN
-DICM_DECLARE(int)
-dicm_dst_user_create(struct dicm_dst **pself, void *data,
-                     int64_t (*fp_write)(struct dicm_dst *, const void *,
-                                         size_t),
-                     int64_t (*fp_seek)(struct dicm_dst *, int64_t,
-                                        int)) DICM_NONNULL;
+                                           size_t),
+                       int64_t (*fp_seek)(struct dicm_dst *, int64_t, int))
+    DICM_NONNULL(1, 2, 3);
 
 /** @} */
 
@@ -236,31 +238,31 @@ struct dicm_key {
  */
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_create(struct dicm_parser **pself) DICM_NONNULL;
+dicm_parser_create(struct dicm_parser **pself) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_parser_set_input(struct dicm_parser *self, int structure_type,
-                      struct dicm_src *src) DICM_NONNULL;
+                      struct dicm_src *src) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_next_event(struct dicm_parser *self) DICM_NONNULL;
+dicm_parser_next_event(struct dicm_parser *self) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_get_key(struct dicm_parser *self,
-                    struct dicm_key *key) DICM_NONNULL;
+dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key)
+    DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_get_value_length(struct dicm_parser *self,
-                             uint32_t *len) DICM_NONNULL;
+dicm_parser_get_value_length(struct dicm_parser *self, uint32_t *len)
+    DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_parser_read_value(struct dicm_parser *self, void *ptr,
-                       size_t len) DICM_NONNULL;
+dicm_parser_read_value(struct dicm_parser *self, void *ptr, size_t len)
+    DICM_NONNULL();
 
 /** @} */
 
@@ -273,31 +275,31 @@ struct dicm_emitter;
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_create(struct dicm_emitter **pself) DICM_NONNULL;
+dicm_emitter_create(struct dicm_emitter **pself) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
 dicm_emitter_set_output(struct dicm_emitter *self, int structure_type,
-                        struct dicm_dst *dst) DICM_NONNULL;
+                        struct dicm_dst *dst) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_emit(struct dicm_emitter *self, int event_type) DICM_NONNULL;
+dicm_emitter_emit(struct dicm_emitter *self, int event_type) DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_set_key(struct dicm_emitter *self,
-                     const struct dicm_key *key) DICM_NONNULL;
+dicm_emitter_set_key(struct dicm_emitter *self, const struct dicm_key *key)
+    DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_set_value_length(struct dicm_emitter *self,
-                              uint32_t len) DICM_NONNULL;
+dicm_emitter_set_value_length(struct dicm_emitter *self, uint32_t len)
+    DICM_NONNULL();
 
 DICM_CHECK_RETURN
 DICM_DECLARE(int)
-dicm_emitter_write_value(struct dicm_emitter *self, const void *buf,
-                         size_t len) DICM_NONNULL;
+dicm_emitter_write_value(struct dicm_emitter *self, const void *buf, size_t len)
+    DICM_NONNULL();
 
 /** @} */
 

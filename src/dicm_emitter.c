@@ -25,7 +25,7 @@ struct _emitter {
   array(item_writer_t) * item_writers;
 };
 
-static DICM_CHECK_RETURN int emitter_destroy(struct object *) DICM_NONNULL;
+static DICM_CHECK_RETURN int emitter_destroy(struct object *) DICM_NONNULL();
 
 static struct emitter_vtable const g_vtable = {
     /* object interface */

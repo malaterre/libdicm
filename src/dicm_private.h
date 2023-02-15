@@ -6,8 +6,6 @@
 #ifdef __GNUC__
 #define DICM_UNUSED __attribute__((__unused__))
 #define DICM_PACKED __attribute__((packed))
-#define DICM_NONNULL1(x) __attribute__((nonnull(x)))
-#define DICM_NONNULL2(x, y) __attribute__((nonnull(x, y)))
 
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -24,7 +22,7 @@
 struct object;
 struct object_prv_vtable {
   DICM_CHECK_RETURN
-  int (*fp_destroy)(struct object *const) DICM_NONNULL;
+  int (*fp_destroy)(struct object *const) DICM_NONNULL();
 };
 
 struct object_vtable {

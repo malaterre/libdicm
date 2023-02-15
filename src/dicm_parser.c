@@ -23,13 +23,14 @@ struct _parser {
   array(item_reader_t) * item_readers;
 };
 
-static DICM_CHECK_RETURN int _parser_destroy(struct object *) DICM_NONNULL;
+static DICM_CHECK_RETURN int _parser_destroy(struct object *) DICM_NONNULL();
 static DICM_CHECK_RETURN int _parser_get_key(struct dicm_parser *,
-                                             struct dicm_key *) DICM_NONNULL;
+                                             struct dicm_key *) DICM_NONNULL();
 static DICM_CHECK_RETURN int _parser_get_value_length(struct dicm_parser *,
-                                                      uint32_t *) DICM_NONNULL;
+                                                      uint32_t *)
+    DICM_NONNULL();
 static DICM_CHECK_RETURN int _parser_read_value(struct dicm_parser *, void *,
-                                                size_t) DICM_NONNULL;
+                                                size_t) DICM_NONNULL();
 
 static struct parser_vtable const g_vtable = {
     /* object interface */

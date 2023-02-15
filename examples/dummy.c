@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   } else {
     stream = fopen(argv[1], "rb");
-    dicm_src_user_create(&src, stream, my_read, NULL);
+    dicm_src_stream_create(&src, stream, my_read, NULL);
   }
 
   if (dicm_parser_create(&parser) < 0) {
