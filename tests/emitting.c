@@ -91,9 +91,9 @@ int emitting(int argc, char *argv[]) {
       } else {
         size = 0;
       }
-      res = dicm_emitter_set_value_length(emitter, size);
+      res = dicm_emitter_set_size(emitter, size);
       assert(res == 0);
-      res = dicm_emitter_write_value(emitter, buf, size);
+      res = dicm_emitter_write_bytes(emitter, buf, size);
       assert(res == 0);
       break;
     case DICM_DOCUMENT_END_EVENT:
