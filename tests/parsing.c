@@ -108,14 +108,14 @@ int parsing(int argc, char *argv[]) {
       }
       break;
     case DICM_VALUE_EVENT:
-      res = dicm_parser_get_value_length(parser, &size);
+      res = dicm_parser_get_size(parser, &size);
       oldsize = size;
       assert(res == 0);
       /* do/while loop trigger at least one event (even in the case where
        * value_length is exactly 0) */
       do {
         const size_t len = size < buflen ? size : buflen;
-        res = dicm_parser_read_value(parser, buf, len);
+        res = dicm_parser_read_bytes(parser, buf, len);
         if (res != 0) {
           goto error;
         }

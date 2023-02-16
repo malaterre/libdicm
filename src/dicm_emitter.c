@@ -216,8 +216,7 @@ int dicm_emitter_set_key(struct dicm_emitter *self_,
   return 0;
 }
 
-int dicm_emitter_set_value_length(struct dicm_emitter *self_,
-                                  const uint32_t len) {
+int dicm_emitter_set_size(struct dicm_emitter *self_, const uint32_t len) {
   struct _emitter *emitter = (struct _emitter *)self_;
   const enum dicm_state current_state = emitter_get_state(emitter);
   assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
@@ -234,7 +233,7 @@ int dicm_emitter_set_value_length(struct dicm_emitter *self_,
   return -1;
 }
 
-int dicm_emitter_write_value(struct dicm_emitter *self_, const void *ptr,
+int dicm_emitter_write_bytes(struct dicm_emitter *self_, const void *ptr,
                              size_t len) {
   /* FIXME: make alignemnt ptr to uint16 */
   struct _emitter *emitter = (struct _emitter *)self_;

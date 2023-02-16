@@ -90,17 +90,17 @@ int main(int argc, char *argv[]) {
       assert(res == 0);
       break;
     case DICM_VALUE_EVENT:
-      res = dicm_parser_get_value_length(parser, &size);
+      res = dicm_parser_get_size(parser, &size);
       assert(res == 0);
-      res = dicm_emitter_set_value_length(emitter, size);
+      res = dicm_emitter_set_size(emitter, size);
       assert(res == 0);
       /* do/while loop trigger at least one event (even in the case where
        * value_length is exactly 0) */
       do {
         const size_t len = size < buflen ? size : buflen;
-        res = dicm_parser_read_value(parser, buf, len);
+        res = dicm_parser_read_bytes(parser, buf, len);
         assert(res == 0);
-        res = dicm_emitter_write_value(emitter, buf, len);
+        res = dicm_emitter_write_bytes(emitter, buf, len);
         assert(res == 0);
 
         size -= len;

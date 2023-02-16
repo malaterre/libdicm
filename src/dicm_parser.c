@@ -59,11 +59,11 @@ int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
   return dicm_parser_get_key1(self, key);
 }
 
-int dicm_parser_get_value_length(struct dicm_parser *self, uint32_t *len) {
+int dicm_parser_get_size(struct dicm_parser *self, uint32_t *len) {
   return dicm_parser_get_value_length1(self, len);
 }
 
-int dicm_parser_read_value(struct dicm_parser *self, void *ptr, size_t len) {
+int dicm_parser_read_bytes(struct dicm_parser *self, void *ptr, size_t len) {
   return dicm_parser_read_value1(self, ptr, len);
 }
 
