@@ -39,7 +39,7 @@ struct object {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define MAKE_VR(left, right) (right << 8 | left)
 #else
-#define MAKE_VR(left, right) (left << 8 | right)
+#define MAKE_VR(left, right) ((left << 8 | right) << 16)
 #endif
 
 enum VALUE_REPRESENTATIONS {
