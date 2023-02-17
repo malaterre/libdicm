@@ -103,11 +103,19 @@ static inline struct ivr _ivr_init1(const struct _attribute *da) {
 
 static inline struct evr _evr_init2(const struct _attribute *da) {
   struct evr evr;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   evr.tag = bswap_32(da->tag);
+#else
+  evr.tag = da->tag;
+#endif
   const uint32_t vr = da->vr;
   const bool is_vr16 = _is_vr16(vr);
   evr.vr = vr;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   evr.vl = is_vr16 ? bswap_16(da->vl) : bswap_32(da->vl);
+#else
+  evr.vl = is_vr16 ? da->vl : da->vl;
+#endif
   evr.vr_size = is_vr16 ? 2 : 4;
   return evr;
 }
