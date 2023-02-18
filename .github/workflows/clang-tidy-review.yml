@@ -1,5 +1,5 @@
 ---
-# https://github.com/marketplace/actions/clang-tidy-review
+# https://github.com/marketplace/actions/c-c-linter
 
 name: clang-tidy-review
 on: [pull_request]
@@ -8,12 +8,35 @@ jobs:
   clang-tidy-review:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: ZedThree/clang-tidy-review@v0.10.1
-      id: review
-      with:
-        # CMake command to run in order to generate compile_commands.json
-        cmake_command: >
-          cmake
+      - uses: actions/checkout@v3
+      - name: cmake
+        run: >
+          CC=clang cmake
+          -G "Unix Makefiles"
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_EXPORT_COMPILE_COMMANDS=on .
+      - uses: cpp-linter/cpp-linter-action@v2
+        id: review
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: file
+          version: '14'
+          lines-changed-only: true
+          thread-comments: true
+          database: .
+          tidy-checks: >-
+            -*,
+            performance-*,
+            readability-*,
+            bugprone-*,
+            cppcoreguidelines-*,
+            mpi-*,
+            misc-*
+            portability-*,
+            modernize-*,
+            clang-analyzer-*
+      - name: Fail fast?!
+        if: steps.review.outputs.checks-failed > 0
+        run: |
+          echo "Some files failed the linting checks!"
