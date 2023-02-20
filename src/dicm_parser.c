@@ -36,7 +36,7 @@ static struct parser_vtable const g_vtable = {
     /* object interface */
     .object = {.fp_destroy = _parser_destroy},
 /* parser interface */
-#if 1
+#if 0
     .parser = {.fp_get_key = _parser_get_key,
                .fp_get_value_length = _parser_get_value_length,
                .fp_read_value = _parser_read_value}
@@ -56,15 +56,47 @@ static inline bool is_root_dataset(const struct _parser *self) {
 }
 
 int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
+  struct _parser *parser = (struct _parser *)self;
+  const enum dicm_state cur_state = get_state(parser);
+  if (cur_state == STATE_KEY) {
+#if 0
   return dicm_parser_get_key1(self, key);
+#else
+    struct _item_reader *item_reader = get_item_reader(parser);
+    key->tag = item_reader->da.tag;
+    key->vr = item_reader->da.vr;
+    return 0;
+#endif
+  }
+  return -1;
 }
 
 int dicm_parser_get_size(struct dicm_parser *self, uint32_t *len) {
+  struct _parser *parser = (struct _parser *)self;
+  const enum dicm_state cur_state = get_state(parser);
+  if (cur_state == STATE_VALUE) {
+#if 0
   return dicm_parser_get_value_length1(self, len);
+#else
+    struct _item_reader *item_reader = get_item_reader(parser);
+    *len = item_reader->da.vl;
+    return 0;
+#endif
+  }
+  return -1;
 }
 
 int dicm_parser_read_bytes(struct dicm_parser *self, void *ptr, size_t len) {
+  struct _parser *parser = (struct _parser *)self;
+  const enum dicm_state cur_state = get_state(parser);
+  if (cur_state == STATE_VALUE) {
+#if 0
   return dicm_parser_read_value1(self, ptr, len);
+#else
+    return _parser_read_value(self, ptr, len);
+#endif
+  }
+  return -1;
 }
 
 int _parser_destroy(struct object *const self) {

@@ -125,8 +125,13 @@ int parsing(int argc, char *argv[]) {
       fprintf(out, " %.*s", (int)oldsize, buf);
       break;
     default:
+      res = dicm_parser_get_key(parser, &key);
+      assert(res < 0);
+      res = dicm_parser_get_size(parser, &size);
+      assert(res < 0);
+      res = dicm_parser_read_bytes(parser, buf, buflen);
+      assert(res < 0);
       fprintf(out, "%s", events[etype]);
-      ;
     }
 
     /* Are we finished? */
