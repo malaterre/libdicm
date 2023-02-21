@@ -8,7 +8,7 @@
 struct dicm_emitter;
 
 struct emitter_prv_vtable {
-#if 0
+#if 1
   /* kKey */
   DICM_CHECK_RETURN int (*fp_write_key)(struct dicm_emitter *,
                                         const struct dicm_key *) DICM_NONNULL();

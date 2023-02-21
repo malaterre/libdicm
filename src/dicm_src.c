@@ -3,6 +3,8 @@
 
 #include "dicm_src.h"
 
+#include "posix_compat.h"
+
 #include <stdio.h>  /* FILE */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* memcpy */
@@ -113,9 +115,9 @@ int dicm_src_file_create(struct dicm_src **pself, FILE *stream) {
 struct mem {
   struct dicm_src super;
   /* data */
-  const void *cur;
-  const void *beg;
-  const void *end;
+  const char *cur;
+  const char *beg;
+  const char *end;
 };
 
 static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL();
@@ -177,7 +179,7 @@ int dicm_src_mem_create(struct dicm_src **pself, const void *ptr, size_t size) {
     *pself = &self->super;
     self->super.vtable = &g_mem_vtable;
     self->cur = self->beg = ptr;
-    self->end = ptr + size;
+    self->end = (char *)ptr + size;
     return 0;
   }
   *pself = NULL;
