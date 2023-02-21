@@ -3,6 +3,8 @@
 
 #include "dicm_dst.h"
 
+#include "posix_compat.h"
+
 #include <stdio.h>  /* FILE */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* memcpy */
@@ -52,7 +54,7 @@ int64_t file_write(struct dicm_dst *const dst, const void *buf, size_t size) {
 
 int64_t file_seek(struct dicm_dst *const dst, int64_t offset, int whence) {
   struct file *self = (struct file *)dst;
-  const off_t ret = fseeko(self->stream, offset, whence);
+  const int ret = fseeko(self->stream, offset, whence);
   if (ret < 0)
     return ret;
   return ftello(self->stream);
@@ -83,9 +85,9 @@ int dicm_dst_file_create(struct dicm_dst **pself, FILE *stream) {
 struct mem {
   struct dicm_dst super;
   /* data */
-  void *cur;
-  void *beg;
-  void *end;
+  char *cur;
+  char *beg;
+  char *end;
 };
 
 static DICM_CHECK_RETURN int mem_destroy(struct object *) DICM_NONNULL();
@@ -147,7 +149,7 @@ int dicm_dst_mem_create(struct dicm_dst **pself, void *ptr, size_t size) {
     *pself = &self->super;
     self->super.vtable = &g_mem_vtable;
     self->cur = self->beg = ptr;
-    self->end = ptr + size;
+    self->end = (char *)ptr + size;
     return 0;
   }
   *pself = NULL;

@@ -31,7 +31,7 @@ static inline bool _vl_is_valid(const dicm_vl_t vl) {
   return dicm_vl_is_undefined(vl) || vl % 2 == 0;
 }
 
-static inline bool _attribute_is_valid(const struct _attribute *da) {
+static inline bool _attribute_is_valid(const struct key_info *da) {
   // 1. check triplet separately:
   const bool valid =
       _tag_is_valid(da->tag) && _vr_is_valid(da->vr) && _vl_is_valid(da->vl);

@@ -8,21 +8,21 @@
 #include <stdlib.h> /* malloc */
 
 // FIXME I need to define a name without spaces:
-typedef struct _item_writer item_writer_t;
-struct _emitter {
+typedef struct level_emitter level_emitter_t;
+struct emitter {
   struct dicm_emitter emitter;
 
   /* data */
   struct dicm_dst *dst;
 
   /* the current item state */
-  enum dicm_state current_item_state;
+  enum state current_item_state;
 
   /* current pos in value_length */
   uint32_t value_length_pos;
 
-  /* item writers */
-  array(item_writer_t) * item_writers;
+  /* level emitters */
+  array(level_emitter_t) * level_emitters;
 };
 
 static DICM_CHECK_RETURN int emitter_destroy(struct object *) DICM_NONNULL();
@@ -38,55 +38,55 @@ static struct emitter_vtable const g_vtable = {
 #endif
 };
 
-static inline struct _item_writer *
-emitter_get_level_writer(struct _emitter *emitter) {
-  return &array_back(emitter->item_writers);
+static inline struct level_emitter *
+emitter_get_level_emitter(struct emitter *emitter) {
+  return &array_back(emitter->level_emitters);
 }
 
-static inline enum dicm_state emitter_get_state(struct _emitter *emitter) {
+static inline enum state emitter_get_state(struct emitter *emitter) {
   return emitter->current_item_state;
 }
 
-static inline bool emitter_is_root_dataset(const struct _emitter *emitter) {
-  return emitter->item_writers->size == 1;
+static inline bool emitter_is_root_dataset(const struct emitter *emitter) {
+  return emitter->level_emitters->size == 1;
 }
 
 #if 0
-void init_root_item_writer(struct _item_writer *new_item,
+void init_root_level_emitter(struct _level_emitter *new_item,
                            enum dicm_structure_type);
 #else
-void encap_init_item_writer(struct _item_writer *new_item);
-void ivrle_init_item_writer(struct _item_writer *new_item);
-void evrle_init_item_writer(struct _item_writer *new_item);
-void evrbe_init_item_writer(struct _item_writer *new_item);
+void encap_init_level_emitter(struct level_emitter *new_item);
+void ivrle_init_level_emitter(struct level_emitter *new_item);
+void evrle_init_level_emitter(struct level_emitter *new_item);
+void evrbe_init_level_emitter(struct level_emitter *new_item);
 #endif
 
 static inline void
-emitter_set_root_level(struct _emitter *emitter,
+emitter_set_root_level(struct emitter *emitter,
                        const enum dicm_structure_type structure_type,
-                       const enum dicm_state current_state) {
+                       const enum state current_state) {
   assert(current_state == STATE_INVALID);
   emitter->current_item_state = current_state;
 
   emitter->value_length_pos = VL_UNDEFINED;
-  struct _item_writer new_item = {};
-  array_push(emitter->item_writers, new_item);
+  const struct level_emitter new_item = {.da = 0};
+  array_push(emitter->level_emitters, new_item);
 #if 0
-  init_root_item_writer(&array_back(emitter->item_writers), structure_type);
+  init_root_level_emitter(&array_back(emitter->level_emitters), structure_type);
 #else
-  struct _item_writer *root_item = &array_back(emitter->item_writers);
+  struct level_emitter *root_item = &array_back(emitter->level_emitters);
   switch (structure_type) {
   case DICM_STRUCTURE_ENCAPSULATED:
-    encap_init_item_writer(root_item);
+    encap_init_level_emitter(root_item);
     break;
   case DICM_STRUCTURE_IMPLICIT:
-    ivrle_init_item_writer(root_item);
+    ivrle_init_level_emitter(root_item);
     break;
   case DICM_STRUCTURE_EXPLICIT_LE:
-    evrle_init_item_writer(root_item);
+    evrle_init_level_emitter(root_item);
     break;
   case DICM_STRUCTURE_EXPLICIT_BE:
-    evrbe_init_item_writer(root_item);
+    evrbe_init_level_emitter(root_item);
     break;
   default:
     assert(0);
@@ -95,29 +95,29 @@ emitter_set_root_level(struct _emitter *emitter,
   assert(emitter_is_root_dataset(emitter));
 }
 
-#define item_writer_next_event(t, state, dst, event)                           \
-  ((t)->vtable->writer.fp_next_event((t), (state), (dst), (event)))
-#define item_writer_vl_token(t, dst, tok)                                      \
-  ((t)->vtable->writer.fp_vl_token((t), (dst), (tok)))
-#define item_writer_next_level(t, state)                                       \
-  ((t)->vtable->writer.fp_next_level((t), (state)))
+#define level_emitter_next_event(t, state, dst, event)                         \
+  ((t)->vtable->level_emitter.fp_next_event((t), (state), (dst), (event)))
+#define level_emitter_vl_token(t, dst, tok)                                    \
+  ((t)->vtable->level_emitter.fp_vl_token((t), (dst), (tok)))
+#define level_emitter_next_level(t, state)                                     \
+  ((t)->vtable->level_emitter.fp_next_level((t), (state)))
 
-static inline void emitter_push_level(struct _emitter *emitter,
-                                      const enum dicm_state current_state) {
-  struct _item_writer *item_writer = emitter_get_level_writer(emitter);
-  struct _item_writer new_item =
-      item_writer_next_level(item_writer, current_state);
-  array_push(emitter->item_writers, new_item);
+static inline void emitter_push_level(struct emitter *emitter,
+                                      const enum state current_state) {
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
+  struct level_emitter new_item =
+      level_emitter_next_level(level_emitter, current_state);
+  array_push(emitter->level_emitters, new_item);
 }
 
-static inline void emitter_pop_level(struct _emitter *emitter,
-                                     const enum dicm_state current_state) {
+static inline void emitter_pop_level(struct emitter *emitter,
+                                     const enum state current_state) {
   (void)current_state;
-  (void)array_pop(emitter->item_writers);
+  (void)array_pop(emitter->level_emitters);
 }
 
-static enum dicm_state emitter_emit(struct _emitter *emitter,
-                                    const enum dicm_event_type next) {
+static enum state emitter_emit(struct emitter *emitter,
+                               const enum dicm_event_type next) {
   assert(emitter->current_item_state != STATE_INVALID);
   assert(next >= 0);
   // special init case
@@ -129,9 +129,9 @@ static enum dicm_state emitter_emit(struct _emitter *emitter,
   }
 
   // else compute new state from event:
-  struct _item_writer *item_writer = emitter_get_level_writer(emitter);
-  const enum dicm_state new_state = item_writer_next_event(
-      item_writer, emitter->current_item_state, emitter->dst, next);
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
+  const enum state new_state = level_emitter_next_event(
+      level_emitter, emitter->current_item_state, emitter->dst, next);
 
   // FIXME: should not expose detail frag vs item here:
   switch (new_state) {
@@ -151,8 +151,8 @@ static enum dicm_state emitter_emit(struct _emitter *emitter,
 }
 
 int emitter_destroy(struct object *const self) {
-  struct _emitter *emitter = (struct _emitter *)self;
-  array_free(emitter->item_writers);
+  struct emitter *emitter = (struct emitter *)self;
+  array_free(emitter->level_emitters);
   free(emitter);
   return 0;
 }
@@ -160,14 +160,14 @@ int emitter_destroy(struct object *const self) {
 /* public API */
 int dicm_emitter_set_output(struct dicm_emitter *self, const int structure_type,
                             struct dicm_dst *dst) {
-  struct _emitter *emitter = (struct _emitter *)self;
+  struct emitter *emitter = (struct emitter *)self;
   // clear any previous run:
-  emitter->item_writers->size = 0;
+  emitter->level_emitters->size = 0;
   emitter->current_item_state = STATE_INVALID;
   const enum dicm_structure_type estype = structure_type;
   // update ready state:
   emitter->dst = dst;
-  enum dicm_state new_state = STATE_INVALID;
+  enum state new_state = STATE_INVALID;
   switch (estype) {
   case DICM_STRUCTURE_ENCAPSULATED:
   case DICM_STRUCTURE_IMPLICIT:
@@ -183,7 +183,7 @@ int dicm_emitter_set_output(struct dicm_emitter *self, const int structure_type,
 }
 
 int dicm_emitter_emit(struct dicm_emitter *self, const int event_type) {
-  struct _emitter *emitter = (struct _emitter *)self;
+  struct emitter *emitter = (struct emitter *)self;
   if (emitter->current_item_state == STATE_INVALID) {
     return STATE_INVALID;
   }
@@ -198,17 +198,17 @@ int dicm_emitter_emit(struct dicm_emitter *self, const int event_type) {
 
 int dicm_emitter_set_key(struct dicm_emitter *self_,
                          const struct dicm_key *key) {
-  struct _emitter *emitter = (struct _emitter *)self_;
-  const enum dicm_state current_state = emitter_get_state(emitter);
+  struct emitter *emitter = (struct emitter *)self_;
+  const enum state current_state = emitter_get_state(emitter);
   assert(current_state == STATE_STARTDOCUMENT || current_state == STATE_VALUE ||
          current_state == STATE_STARTITEM ||
          current_state == STATE_ENDSEQUENCE);
 
-  struct _item_writer *item_writer = emitter_get_level_writer(emitter);
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
   const enum dicm_event_type next = DICM_KEY_EVENT;
-  const enum dicm_token token = event2token(next);
+  const enum token token = event2token(next);
   assert(token == TOKEN_KEY);
-  struct _attribute *da = &item_writer->da;
+  struct key_info *da = &level_emitter->da;
   da->tag = key->tag;
   da->vr = key->vr;
   /* FIXME: validate key */
@@ -217,12 +217,12 @@ int dicm_emitter_set_key(struct dicm_emitter *self_,
 }
 
 int dicm_emitter_set_size(struct dicm_emitter *self_, const uint32_t len) {
-  struct _emitter *emitter = (struct _emitter *)self_;
-  const enum dicm_state current_state = emitter_get_state(emitter);
+  struct emitter *emitter = (struct emitter *)self_;
+  const enum state current_state = emitter_get_state(emitter);
   assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
 
-  struct _item_writer *item_writer = emitter_get_level_writer(emitter);
-  struct _attribute *da = &item_writer->da;
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
+  struct key_info *da = &level_emitter->da;
   if (len % 2 == 0) {
     da->vl = len;
     emitter->value_length_pos = VL_UNDEFINED;
@@ -236,20 +236,20 @@ int dicm_emitter_set_size(struct dicm_emitter *self_, const uint32_t len) {
 int dicm_emitter_write_bytes(struct dicm_emitter *self_, const void *ptr,
                              size_t len) {
   /* FIXME: make alignemnt ptr to uint16 */
-  struct _emitter *emitter = (struct _emitter *)self_;
-  const enum dicm_state current_state = emitter_get_state(emitter);
-  struct _item_writer *item_writer = emitter_get_level_writer(emitter);
+  struct emitter *emitter = (struct emitter *)self_;
+  const enum state current_state = emitter_get_state(emitter);
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
   assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
 
-  const uint32_t value_length = item_writer->da.vl;
+  const uint32_t value_length = level_emitter->da.vl;
   assert(len <= value_length);
   const uint32_t to_write = (uint32_t)len;
   struct dicm_dst *dst = emitter->dst;
-  const enum dicm_token tok = TOKEN_VALUE;
+  const enum token tok = TOKEN_VALUE;
   /* Write VL */
   if (emitter->value_length_pos == VL_UNDEFINED) {
-    const enum dicm_state new_state =
-        item_writer_vl_token(item_writer, dst, tok);
+    const enum state new_state =
+        level_emitter_vl_token(level_emitter, dst, tok);
     assert(new_state == STATE_VALUE);
     emitter->value_length_pos = 0;
   }
@@ -258,17 +258,17 @@ int dicm_emitter_write_bytes(struct dicm_emitter *self_, const void *ptr,
   int64_t err = dicm_dst_write(dst, ptr, to_write);
   assert(err == to_write);
   emitter->value_length_pos += to_write;
-  assert(emitter->value_length_pos <= item_writer->da.vl);
+  assert(emitter->value_length_pos <= level_emitter->da.vl);
 
   return 0;
 }
 
 int dicm_emitter_create(struct dicm_emitter **pself) {
-  struct _emitter *self = (struct _emitter *)malloc(sizeof(*self));
+  struct emitter *self = (struct emitter *)malloc(sizeof(*self));
   if (self) {
     *pself = &self->emitter;
     self->emitter.vtable = &g_vtable;
-    array_new(item_writer_t, self->item_writers);
+    array_new(level_emitter_t, self->level_emitters);
 
     return 0;
   }

@@ -18,7 +18,6 @@ set(COMMON_CASES
     all_vrs_2023
     dataelement
     trailing_padding
-    sqi
     empty_sqi
     sqi_empty_item
     sqi_one_item

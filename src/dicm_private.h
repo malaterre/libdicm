@@ -16,7 +16,16 @@
 #include <stdint.h>
 
 /* FIXME: not portable */
+#ifndef _MSC_VER
 #include <byteswap.h>
+#else
+#include <stdlib.h>
+// static inline uint16_t bswap_16 (uint16_t val) { return _byteswap_ushort (
+// val ); }
+#define bswap_16 _byteswap_ushort
+#define bswap_32 _byteswap_ulong
+#define bswap_64 _byteswap_uint64
+#endif
 
 /* common object private vtable */
 struct object;
@@ -215,7 +224,7 @@ static inline void _ede32_set_vl(union _ude *ude, const uint32_t vl) {
   ude->ede32.vl = vl;
 }
 
-enum dicm_state {
+enum state {
   STATE_INVALID = -1,
   /* ready state (after invalid) */
   STATE_INIT = 0,
@@ -238,7 +247,7 @@ enum dicm_state {
   STATE_ENDSEQUENCE,
 };
 
-enum dicm_token {
+enum token {
   /* key (data element tag+vr) */
   TOKEN_KEY = 0,
   /* data value, only when not undefined length */
@@ -260,8 +269,7 @@ enum dicm_token {
   TOKEN_INVALID_DATA,
 };
 
-static inline enum dicm_event_type
-state2event(const enum dicm_state new_state) {
+static inline enum dicm_event_type state2event(const enum state new_state) {
   enum dicm_event_type next;
   switch (new_state) {
   case STATE_KEY:
@@ -300,8 +308,7 @@ state2event(const enum dicm_state new_state) {
   return next;
 }
 
-static inline enum dicm_event_type
-token2event(const enum dicm_token dicm_next) {
+static inline enum dicm_event_type token2event(const enum token dicm_next) {
   enum dicm_event_type next;
   switch (dicm_next) {
   case TOKEN_KEY:
@@ -332,9 +339,8 @@ token2event(const enum dicm_token dicm_next) {
   return next;
 }
 
-static inline enum dicm_token
-event2token(const enum dicm_event_type event_type) {
-  enum dicm_token token;
+static inline enum token event2token(const enum dicm_event_type event_type) {
+  enum token token;
   switch (event_type) {
   case DICM_KEY_EVENT:
     token = TOKEN_KEY;

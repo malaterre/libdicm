@@ -1,9 +1,13 @@
 #include "dicm_log.h"
 
-#include <stdarg.h>    /* va_list */
+#include <stdarg.h> /* va_list */
+#ifdef _MSC_VER
+#define _Atomic
+#else
 #include <stdatomic.h> /* _Atomic */
-#include <stdio.h>     /* fprintf */
-#include <string.h>    /* strlen */
+#endif
+#include <stdio.h>  /* fprintf */
+#include <string.h> /* strlen */
 
 struct logging {
   void (*fp_msg)(int, const char *) DICM_NONNULL();
@@ -31,7 +35,7 @@ void _log_msg(enum dicm_log_level_type log_level, const char *fmt, ...) {
   va_start(ap, fmt);
   vsnprintf(buffer, sizeof buffer, fmt, ap);
   va_end(ap);
-#if 0
+#ifdef _MSC_VER
   global_log.fp_msg(log_level, buffer);
 #else
   struct logging tmp = atomic_load_explicit(&global_log, memory_order_relaxed);
@@ -40,7 +44,7 @@ void _log_msg(enum dicm_log_level_type log_level, const char *fmt, ...) {
 }
 
 void dicm_configure_log_msg(void (*fp_msg)(int, const char *)) {
-#if 0
+#ifdef _MSC_VER
   global_log.fp_msg = fp_msg;
 #else
   struct logging tmp = {.fp_msg = fp_msg};

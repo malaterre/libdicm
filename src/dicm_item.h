@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-struct _attribute {
+struct key_info {
   /* the current tag */
   uint32_t tag;
   /* the current vr */
@@ -19,7 +19,7 @@ struct _attribute {
   uint32_t reserved;
 };
 
-static inline bool _ude_init(union _ude *ude, const struct _attribute *da) {
+static inline bool _ude_init(union _ude *ude, const struct key_info *da) {
   _ide_set_tag(ude, da->tag);
   const bool is_vr16 = _is_vr16(da->vr);
   if (is_vr16) {
@@ -68,7 +68,7 @@ static inline uint32_t evr_get_size(struct evr evr) {
   return 4 + 2 * evr.vr_size;
 }
 
-static inline struct evr _evr_init1(const struct _attribute *da) {
+static inline struct evr _evr_init1(const struct key_info *da) {
   struct evr evr;
   _Static_assert(16 == sizeof(evr), "16 bytes");
 #if 0
@@ -89,7 +89,7 @@ static inline struct evr _evr_init1(const struct _attribute *da) {
   return evr;
 }
 
-static inline struct ivr _ivr_init1(const struct _attribute *da) {
+static inline struct ivr _ivr_init1(const struct key_info *da) {
   struct ivr ivr;
   union {
     uint32_t t;
@@ -101,7 +101,7 @@ static inline struct ivr _ivr_init1(const struct _attribute *da) {
   return ivr;
 }
 
-static inline struct evr _evr_init2(const struct _attribute *da) {
+static inline struct evr _evr_init2(const struct key_info *da) {
   struct evr evr;
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   evr.tag = bswap_32(da->tag);
@@ -120,74 +120,77 @@ static inline struct evr _evr_init2(const struct _attribute *da) {
   return evr;
 }
 
-static inline struct ivr _ivr_init2(const struct _attribute *da) {
+static inline struct ivr _ivr_init2(const struct key_info *da) {
   struct ivr ivr;
   ivr.tag = bswap_32(da->tag);
   ivr.vl = bswap_32(da->vl);
   return ivr;
 }
 
-struct _item_reader;
-struct _item_reader_prv_vtable {
+struct level_parser;
+struct level_parser_prv_vtable {
   /* before reading key */
-  DICM_CHECK_RETURN enum dicm_token (*fp_key_token)(struct _item_reader *self,
-                                                    struct dicm_src *src);
+  DICM_CHECK_RETURN enum token (*fp_key_token)(struct level_parser *self,
+                                               struct dicm_src *src);
   /* before reading value (after key) */
-  DICM_CHECK_RETURN enum dicm_token (*fp_value_token)(struct _item_reader *self,
-                                                      struct dicm_src *src);
+  DICM_CHECK_RETURN enum token (*fp_value_token)(struct level_parser *self,
+                                                 struct dicm_src *src);
 
   /* compute new state from current state + event */
-  DICM_CHECK_RETURN enum dicm_state (*fp_next_event)(
-      struct _item_reader *self, const enum dicm_state current_state,
-      struct dicm_src *src);
+  DICM_CHECK_RETURN enum state (*fp_next_event)(struct level_parser *self,
+                                                const enum state current_state,
+                                                struct dicm_src *src);
 
   /* return next level emitter */
-  struct _item_reader (*fp_next_level)(struct _item_reader *self,
-                                       enum dicm_state new_state)
-      DICM_NONNULL();
+  struct level_parser (*fp_next_level)(struct level_parser *self,
+                                       enum state new_state) DICM_NONNULL();
 };
-struct _item_reader_vtable {
-  struct _item_reader_prv_vtable const reader;
+struct level_parser_vtable {
+  struct level_parser_prv_vtable const reader;
 };
-struct _item_reader {
-  struct _attribute da;
+struct level_parser {
+  struct key_info da;
 
-  struct _item_reader_vtable const *vtable;
+  struct level_parser_vtable const *vtable;
 };
 
 // FIXME: rename to onelevel_writer or nested_emitter or sublevel_emitter
-struct _item_writer;
-struct _item_writer_prv_vtable {
+struct level_emitter;
+struct level_emitter_prv_vtable {
   /* writing key */
-  DICM_CHECK_RETURN enum dicm_state (*fp_key_token)(
-      struct _item_writer *self, struct dicm_dst *dst,
-      const enum dicm_token token);
+  DICM_CHECK_RETURN enum state (*fp_key_token)(struct level_emitter *self,
+                                               struct dicm_dst *dst,
+                                               const enum token token)
+      DICM_NONNULL();
   /* writing vl */
-  DICM_CHECK_RETURN enum dicm_state (*fp_vl_token)(struct _item_writer *self,
-                                                   struct dicm_dst *dst,
-                                                   const enum dicm_token token);
+  DICM_CHECK_RETURN enum state (*fp_vl_token)(struct level_emitter *self,
+                                              struct dicm_dst *dst,
+                                              const enum token token)
+      DICM_NONNULL();
   /* writing value */
-  DICM_CHECK_RETURN enum dicm_state (*fp_value_token)(
-      struct _item_writer *self, struct dicm_dst *dst,
-      const enum dicm_token token);
+  DICM_CHECK_RETURN enum state (*fp_value_token)(struct level_emitter *self,
+                                                 struct dicm_dst *dst,
+                                                 const enum token token)
+      DICM_NONNULL();
 
   /* compute new state from current state + event */
-  DICM_CHECK_RETURN enum dicm_state (*fp_next_event)(
-      struct _item_writer *self, const enum dicm_state current_state,
-      struct dicm_dst *dst, const enum dicm_event_type next);
+  DICM_CHECK_RETURN enum state (*fp_next_event)(struct level_emitter *self,
+                                                const enum state current_state,
+                                                struct dicm_dst *dst,
+                                                const enum dicm_event_type next)
+      DICM_NONNULL();
 
   /* return next level emitter */
-  struct _item_writer (*fp_next_level)(struct _item_writer *self,
-                                       enum dicm_state new_state)
-      DICM_NONNULL();
+  struct level_emitter (*fp_next_level)(struct level_emitter *self,
+                                        enum state new_state) DICM_NONNULL();
 };
-struct _item_writer_vtable {
-  struct _item_writer_prv_vtable const writer;
+struct level_emitter_vtable {
+  struct level_emitter_prv_vtable const level_emitter;
 };
-struct _item_writer {
-  struct _attribute da;
+struct level_emitter {
+  struct key_info da;
   /* FIXME: item number book-keeping */
-  struct _item_writer_vtable const *vtable;
+  struct level_emitter_vtable const *vtable;
 };
 
 /* tag */
@@ -263,7 +266,7 @@ static inline bool dicm_vl_is_undefined(const dicm_vl_t vl) {
 
 /* key */
 static inline bool
-dicm_attribute_is_encapsulated_pixel_data(const struct _attribute *da) {
+dicm_attribute_is_encapsulated_pixel_data(const struct key_info *da) {
   // Make sure Pixel Data is Encapsulated (Sequence of Fragments):
   if (da->tag == TAG_PIXELDATA && da->vl == VL_UNDEFINED && da->vr == VR_OB) {
     return true;
