@@ -1,0 +1,18 @@
+document-start
+key 00090010 LO
+value GEIIS 
+key 00091010 SQ
+sequence-start ffffffff
+item-start ffffffff
+key 00280004 CS
+value MONOCHROME2 
+key 7fe00010 OB
+sequence-start ffffffff
+fragment
+value 0123456789
+fragment
+value ABCDEFGHIJKLMNOP
+sequence-end
+item-end
+sequence-end
+document-end

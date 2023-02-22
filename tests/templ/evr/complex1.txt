@@ -1,0 +1,867 @@
+document-start
+key 0040a730 SQ
+sequence-start 00001562
+item-start 000000c2
+key 0040a010 CS
+value HAS CONCEPT MOD 
+key 0040a040 CS
+value CODE
+key 0040a043 SQ
+sequence-start 00000042
+item-start 0000003a
+key 00080100 SH
+value 113011
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Document Title Modifier 
+item-end
+sequence-end
+key 0040a168 SQ
+sequence-start 00000044
+item-start 0000003c
+key 00080100 SH
+value MR-20 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080104 LO
+value Phoenix ZIP Document
+item-end
+sequence-end
+item-end
+item-start 000000c2
+key 0040a010 CS
+value HAS CONCEPT MOD 
+key 0040a040 CS
+value CODE
+key 0040a043 SQ
+sequence-start 00000052
+item-start 0000004a
+key 00080100 SH
+value 121049
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Language of Content Item and Descendents
+item-end
+sequence-end
+key 0040a168 SQ
+sequence-start 00000034
+item-start 0000002c
+key 00080100 SH
+value eng 
+key 00080102 SH
+value ISO639_2
+key 00080104 LO
+value English 
+item-end
+sequence-end
+item-end
+item-start 000000a4
+key 0040a010 CS
+value HAS OBS CONTEXT 
+key 0040a040 CS
+value CODE
+key 0040a043 SQ
+sequence-start 00000038
+item-start 00000030
+key 00080100 SH
+value 121005
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Observer Type 
+item-end
+sequence-end
+key 0040a168 SQ
+sequence-start 00000030
+item-start 00000028
+key 00080100 SH
+value 121006
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Person
+item-end
+sequence-end
+item-end
+item-start 00000076
+key 0040a010 CS
+value HAS OBS CONTEXT 
+key 0040a040 CS
+value PNAME 
+key 0040a043 SQ
+sequence-start 00000038
+item-start 00000030
+key 00080100 SH
+value 121008
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Observer Name 
+item-end
+sequence-end
+key 0040a123 PN
+value n.a.
+item-end
+item-start 0000122a
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value CONTAINER 
+key 0040a043 SQ
+sequence-start 00000048
+item-start 00000040
+key 00080100 SH
+value 121064
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Current Procedure Description 
+item-end
+sequence-end
+key 0040a050 CS
+value SEPARATE
+key 0040a730 SQ
+sequence-start 00001198
+item-start 0000009e
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value CODE
+key 0040a043 SQ
+sequence-start 00000032
+item-start 0000002a
+key 00080100 SH
+value 111004
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Modality
+item-end
+sequence-end
+key 0040a168 SQ
+sequence-start 00000038
+item-start 00000030
+key 00080100 SH
+value MR
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Magnetic Resonanz 
+item-end
+sequence-end
+item-end
+item-start 0000007a
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000042
+item-start 0000003a
+key 00080100 SH
+value 113016
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Performed Procedure Step
+item-end
+sequence-end
+key 0040a160 UT
+value n.a.
+item-end
+item-start 00001068
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value CONTAINER 
+key 0040a043 SQ
+sequence-start 0000003e
+item-start 00000036
+key 00080100 SH
+value 125203
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Acquisition Protocol
+item-end
+sequence-end
+key 0040a050 CS
+value SEPARATE
+key 0040a730 SQ
+sequence-start 00000fe0
+item-start 00000ed2
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value CONTAINER 
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-30
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Protocol Header 
+item-end
+sequence-end
+key 0040a050 CS
+value SEPARATE
+key 0040a730 SQ
+sequence-start 00000e3e
+item-start 00000080
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000046
+item-start 0000003e
+key 00080100 SH
+value A-92
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value System Type 
+item-end
+sequence-end
+key 0040a160 UT
+value Prisma
+item-end
+item-start 0000008a
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-90
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Software Version
+item-end
+sequence-end
+key 0040a160 UT
+value syngo MR E11
+item-end
+item-start 00000084
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000048
+item-start 00000040
+key 00080100 SH
+value A-84
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Field Strength
+item-end
+sequence-end
+key 0040a160 UT
+value 2.89362 
+item-end
+item-start 000000ae
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000048
+item-start 00000040
+key 00080100 SH
+value A-86
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Protocol Name 
+item-end
+sequence-end
+key 0040a160 UT
+value noPF_noPAT_noPOS_PEres100_ES0p59_BW2222_INTERP_PA 
+item-end
+item-start 0000008a
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000048
+item-start 00000040
+key 00080100 SH
+value A-88
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Sequence Name 
+item-end
+sequence-end
+key 0040a160 UT
+value cmrr_mbep2d_se
+item-end
+item-start 00000086
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-80
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Acquisition Time
+item-end
+sequence-end
+key 0040a160 UT
+value 00:00:06
+item-end
+item-start 0000007e
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000046
+item-start 0000003e
+key 00080100 SH
+value A-98
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Orientation 
+item-end
+sequence-end
+key 0040a160 UT
+value 156 
+item-end
+item-start 00000088
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004e
+item-start 00000046
+key 00080100 SH
+value A-100 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Resolution Matrix 
+item-end
+sequence-end
+key 0040a160 UT
+value 90x90 
+item-end
+item-start 000000d2
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-76
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Number of Slices
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 00000054
+item-start 0000004c
+key 004008ea SQ
+sequence-start 00000036
+item-start 0000002e
+key 00080100 SH
+value 1 
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value unary, no units 
+item-end
+sequence-end
+key 0040a30a DS
+value 60
+item-end
+sequence-end
+item-end
+item-start 000000c6
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 00000042
+item-start 0000003a
+key 00080100 SH
+value A-78
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value FoV Read
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 00000050
+item-start 00000048
+key 004008ea SQ
+sequence-start 00000030
+item-start 00000028
+key 00080100 SH
+value mm
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value millimeter
+item-end
+sequence-end
+key 0040a30a DS
+value 216 
+item-end
+sequence-end
+item-end
+item-start 000000c6
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 00000044
+item-start 0000003c
+key 00080100 SH
+value A-70
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value FoV Phase 
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 0000004e
+item-start 00000046
+key 004008ea SQ
+sequence-start 0000002e
+item-start 00000026
+key 00080100 SH
+value % 
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value percent 
+item-end
+sequence-end
+key 0040a30a DS
+value 100 
+item-end
+sequence-end
+item-end
+item-start 000000ce
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-94
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Slice Thickness 
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 00000050
+item-start 00000048
+key 004008ea SQ
+sequence-start 00000030
+item-start 00000028
+key 00080100 SH
+value mm
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value millimeter
+item-end
+sequence-end
+key 0040a30a DS
+value 2.4 
+item-end
+sequence-end
+item-end
+item-start 000000c4
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 00000044
+item-start 0000003c
+key 00080100 SH
+value A-96
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Slice Gap 
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 0000004c
+item-start 00000044
+key 004008ea SQ
+sequence-start 0000002e
+item-start 00000026
+key 00080100 SH
+value % 
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value percent 
+item-end
+sequence-end
+key 0040a30a DS
+value 0 
+item-end
+sequence-end
+item-end
+item-start 000000d2
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-74
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Repetition Time 
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 00000054
+item-start 0000004c
+key 004008ea SQ
+sequence-start 00000034
+item-start 0000002c
+key 00080100 SH
+value msec
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value milliseconds
+item-end
+sequence-end
+key 0040a30a DS
+value 6100
+item-end
+sequence-end
+item-end
+item-start 000000ca
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 00000044
+item-start 0000003c
+key 00080100 SH
+value A-72
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Echo Time 
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 00000052
+item-start 0000004a
+key 004008ea SQ
+sequence-start 00000034
+item-start 0000002c
+key 00080100 SH
+value msec
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value milliseconds
+item-end
+sequence-end
+key 0040a30a DS
+value 60
+item-end
+sequence-end
+item-end
+item-start 000000c4
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value NUM 
+key 0040a043 SQ
+sequence-start 00000044
+item-start 0000003c
+key 00080100 SH
+value A-82
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Flip Angle
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 0000004c
+item-start 00000044
+key 004008ea SQ
+sequence-start 0000002e
+item-start 00000026
+key 00080100 SH
+value deg 
+key 00080102 SH
+value UCUM
+key 00080104 LO
+value degree
+item-end
+sequence-end
+key 0040a30a DS
+value 90
+item-end
+sequence-end
+item-end
+item-start 00000088
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004c
+item-start 00000044
+key 00080100 SH
+value A-102 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Fat Suppression 
+item-end
+sequence-end
+key 0040a160 UT
+value 33,65538
+item-end
+item-start 00000076
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004e
+item-start 00000046
+key 00080100 SH
+value A-104 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Flow Compensation 
+item-end
+sequence-end
+item-end
+item-start 00000076
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004e
+item-start 00000046
+key 00080100 SH
+value A-106 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Water Suppression 
+item-end
+sequence-end
+item-end
+item-start 00000070
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000048
+item-start 00000040
+key 00080100 SH
+value A-108 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Subtraction 
+item-end
+sequence-end
+item-end
+item-start 00000086
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004e
+item-start 00000046
+key 00080100 SH
+value A-110 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value First Signal Mode 
+item-end
+sequence-end
+key 0040a160 UT
+value 236 
+item-end
+item-start 00000082
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 0000004a
+item-start 00000042
+key 00080100 SH
+value A-112 
+key 00080102 SH
+value 99SMS_CTMR
+key 00080103 SH
+value 1.0 
+key 00080104 LO
+value Contrast Agent
+item-end
+sequence-end
+key 0040a160 UT
+value n.a.
+item-end
+sequence-end
+item-end
+item-start 000000fe
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value CONTAINER 
+key 0040a043 SQ
+sequence-start 00000038
+item-start 00000030
+key 00080100 SH
+value 121138
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Image Acquired
+item-end
+sequence-end
+key 0040a050 CS
+value SEPARATE
+key 0040a730 SQ
+sequence-start 0000007c
+item-start 00000074
+key 0040a010 CS
+value HAS ACQ CONTEXT 
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000034
+item-start 0000002c
+key 00080100 SH
+value 121141
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Image Type
+item-end
+sequence-end
+key 0040a160 UT
+value n.a.
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+item-start 0000006a
+key 0040a010 CS
+value CONTAINS
+key 0040a040 CS
+value TEXT
+key 0040a043 SQ
+sequence-start 00000032
+item-start 0000002a
+key 00080100 SH
+value 121106
+key 00080102 SH
+value DCM 
+key 00080104 LO
+value Comment 
+item-end
+sequence-end
+key 0040a160 UT
+value n.a.
+item-end
+sequence-end
+document-end

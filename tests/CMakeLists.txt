@@ -16,21 +16,57 @@ set(STRUCTURE_NAMES
 )
 set(COMMON_CASES
     all_vrs_2023
-    dataelement
-    trailing_padding
-    empty_sqi
-    sqi_empty_item
-    sqi_one_item
-    sqi_two_items
-    nested_sqi)
-set(raw_CASES pixel_data)
-set(encapsulated_CASES sqf sqf_empty_frag nested_sqf)
+    DataSetTrailingPadding
+    EmptySequenceOfItemsDefinedLength
+    EmptySequenceOfItemsUndefinedLength
+    NestedEmptySequenceOfItems
+    NestedSequenceOfItemsMixed
+    NestedSequenceOfItemsOnly
+    NestedSequenceOfItemsOnlyDefined
+    NestedSequenceOfItemsOnlyDefined1
+    # complex0 complex1 complex2 complex3 complex4
+    NestedSequenceOfItemsOnlyDefined2
+    NestedSequenceOfItemsOnlyDefined3
+    NestedSequenceOfItemsOnlyDefined4
+    SequenceOfItemsEmptyItem
+    SequenceOfItemsEmptyItemDefined
+    SequenceOfItemsEmptyItemDefined2
+    SequenceOfItemsEmptyItemDefined3
+    SequenceOfItemsOneItem
+    SequenceOfItemsOneItemDefined
+    SequenceOfItemsOneItemDefined2
+    SequenceOfItemsOneItemDefined3
+    SequenceOfItemsTwoItems
+    SequenceOfItemsTwoItems1
+    SequenceOfItemsTwoItems2
+    SequenceOfItemsTwoItems3
+    SequenceOfItemsTwoItems4
+    SequenceOfItemsTwoItems5
+    SequenceOfItemsTwoItems6
+    SpecificCharacterSet)
 
-function(add_roundtrip_tests structure_name case struct_dir gold_folder
-         roundtrip_folder)
+set(raw_CASES PixelData)
+set(encapsulated_CASES
+    SequenceOfFragments
+    SequenceOfFragmentsEmptyFragment
+    NestedSequenceOfFragments
+    NestedSequenceOfFragments2
+    NestedSequenceOfFragments3
+    NestedSequenceOfFragments4
+    NestedSequenceOfFragments5
+    NestedSequenceOfFragments6)
+
+function(add_roundtrip_tests structure_name case struct_dir)
+  # gold_folder roundtrip_folder)
   set(case_name ${structure_name}_${case})
   # define input/output
-  set(input ${gold_folder}/${struct_dir}/${case})
+  set(templ_folder ${CMAKE_CURRENT_SOURCE_DIR}/templ)
+  set(gold_folder ${CMAKE_CURRENT_SOURCE_DIR}/gold)
+  set(roundtrip_folder ${CMAKE_CURRENT_BINARY_DIR}/roundtrip)
+  file(MAKE_DIRECTORY ${roundtrip_folder}/${structure_name})
+
+  set(input ${templ_folder}/${struct_dir}/${case})
+  set(reference ${gold_folder}/${struct_dir}/${case})
   set(output ${roundtrip_folder}/${structure_name}/${case})
   # emit
   add_test(NAME emitting_${case_name}
@@ -43,16 +79,20 @@ function(add_roundtrip_tests structure_name case struct_dir gold_folder
                                                        emitting_${case_name})
   # cmp
   add_test(NAME cmp_${case_name} COMMAND ${CMAKE_COMMAND} -E compare_files
-                                         ${input}.txt ${output}.txt)
+                                         ${reference}.txt ${output}.txt)
   set_tests_properties(cmp_${case_name} PROPERTIES DEPENDS parsing_${case_name})
+  # for EVR we must be exactly identical to template:
+  if(NOT ${struct_dir} MATCHES "^ivr")
+    add_test(NAME evrcmp_${case_name} COMMAND ${CMAKE_COMMAND} -E compare_files
+                                              ${input}.txt ${output}.txt)
+    set_tests_properties(evrcmp_${case_name} PROPERTIES DEPENDS
+                                                        parsing_${case_name})
+  endif()
 endfunction()
 
-set(gold_folder ${CMAKE_CURRENT_SOURCE_DIR}/gold)
-set(roundtrip_folder ${CMAKE_CURRENT_BINARY_DIR}/roundtrip)
 foreach(structure_name ${STRUCTURE_NAMES})
-  # prepare folder to store generated files:
-  file(MAKE_DIRECTORY ${roundtrip_folder}/${structure_name})
-  # define test folders:
+  # prepare folder to store generated files: file(MAKE_DIRECTORY
+  # ${roundtrip_folder}/${structure_name}) define test folders:
   string(REPLACE "_" ";" structure_list ${structure_name})
   list(GET structure_list 0 toplevel_name)
   list(GET structure_list 1 sublevel_name)
@@ -60,15 +100,15 @@ foreach(structure_name ${STRUCTURE_NAMES})
   string(SUBSTRING ${sublevel_name} 0 3 sublevel_shortname)
   # setup common tests
   foreach(case ${COMMON_CASES})
-    add_roundtrip_tests(${structure_name} ${case} ${toplevel_shortname}
-                        ${gold_folder} ${roundtrip_folder})
+    add_roundtrip_tests(${structure_name} ${case} ${toplevel_shortname})
+    # ${gold_folder} ${roundtrip_folder})
   endforeach()
   # setup sub tests
   set(sub_CASES ${${sublevel_name}_CASES})
   foreach(case ${sub_CASES})
-    add_roundtrip_tests(
-      ${structure_name} ${case} ${toplevel_shortname}/${sublevel_shortname}
-      ${gold_folder} ${roundtrip_folder})
+    add_roundtrip_tests(${structure_name} ${case}
+                        ${toplevel_shortname}/${sublevel_shortname})
+    # ${gold_folder} ${roundtrip_folder})
   endforeach()
 endforeach()
 

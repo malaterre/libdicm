@@ -1,0 +1,4 @@
+document-start
+key 00080005 CS
+value ISO_IR 100
+document-end

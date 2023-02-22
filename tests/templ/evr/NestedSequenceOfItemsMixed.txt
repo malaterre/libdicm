@@ -1,0 +1,14 @@
+document-start
+key 00081032 SQ
+sequence-start ffffffff
+item-start ffffffff
+key 00082112 SQ
+sequence-start ffffffff
+item-start ffffffff
+item-end
+sequence-end
+key 0008103e LO
+value desc
+item-end
+sequence-end
+document-end

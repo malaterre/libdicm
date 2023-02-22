@@ -1,0 +1,14 @@
+document-start
+key 00880200 SQ
+sequence-start 00000046
+item-start 0000003e
+key 7fe00010 OB
+sequence-start ffffffff
+fragment
+value 0123456789
+fragment
+value ABCDEFGHIJKLMNOP
+sequence-end
+item-end
+sequence-end
+document-end

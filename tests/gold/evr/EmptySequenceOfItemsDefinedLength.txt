@@ -1,0 +1,5 @@
+document-start
+key 00880200 SQ
+sequence-start 00000000
+sequence-end
+document-end

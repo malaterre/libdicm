@@ -1,0 +1,127 @@
+document-start
+key 0040a730 SQ
+sequence-start 000001e8
+item-start 000001e0
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+key 0040a730 SQ
+sequence-start 000001c0
+item-start 00000028
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+key 0040a168 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 0000016c
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+key 0040a730 SQ
+sequence-start 0000014c
+item-start 00000144
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+key 0040a730 SQ
+sequence-start 00000124
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 00000014
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+item-start 0000003c
+key 0040a043 SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+key 0040a300 SQ
+sequence-start 0000001c
+item-start 00000014
+key 004008ea SQ
+sequence-start 00000008
+item-start 00000000
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+sequence-end
+item-end
+sequence-end
+document-end

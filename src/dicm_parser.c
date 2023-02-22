@@ -74,14 +74,28 @@ int dicm_parser_get_key(struct dicm_parser *self, struct dicm_key *key) {
 int dicm_parser_get_size(struct dicm_parser *self, uint32_t *len) {
   struct parser *parser = (struct parser *)self;
   const enum state cur_state = parser_get_state(parser);
-  if (cur_state == STATE_VALUE) {
-#if 0
-  return dicm_parser_get_value_length1(self, len);
-#else
-    struct level_parser *level_parser = parser_get_level_parser(parser);
+  struct level_parser *level_parser = parser_get_level_parser(parser);
+  switch (cur_state) {
+  case STATE_STARTITEM:
+    *len = level_parser->item_length2;
+    return 0;
+  case STATE_VALUE:
+  case STATE_STARTSEQUENCE:
     *len = level_parser->da.vl;
     return 0;
-#endif
+  case STATE_STARTDOCUMENT:
+  case STATE_ENDDOCUMENT:
+  case STATE_ENDSEQUENCE:
+  case STATE_ENDITEM:
+    break;
+  case STATE_STARTFRAGMENTS:
+    *len = level_parser->da.vl;
+    //*len = level_parser->item_length2;
+    return 0;
+  case STATE_FRAGMENT:
+    break;
+  default:
+    assert(0);
   }
   return -1;
 }
@@ -189,7 +203,10 @@ static inline void push_fragments_reader(struct parser *parser) {
 }
 
 static inline void pop_level_parser(struct parser *parser) {
+  struct level_parser *level_parser_old = parser_get_level_parser(parser);
   (void)array_pop(parser->level_parsers);
+  struct level_parser *level_parser = parser_get_level_parser(parser);
+  level_parser->item_length_pos += level_parser_old->sequence_length_pos + 0;
 }
 
 /* public API */
@@ -241,6 +258,7 @@ int parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
     return -1;
   }
   parser->value_length_pos += to_read;
+  level_parser->item_length_pos += to_read;
   assert(parser->value_length_pos <= level_parser->da.vl);
 
   return 0;
@@ -252,7 +270,6 @@ int parser_read_value(struct dicm_parser *const self, void *b, size_t s) {
 int dicm_parser_next_event(struct dicm_parser *self) {
   struct parser *parser = (struct parser *)self;
 
-  struct level_parser *level_parser = parser_get_level_parser(parser);
   // special init case
   // TODO: move to external state machine:
   const enum state cur_state = parser_get_state(parser);
@@ -262,20 +279,9 @@ int dicm_parser_next_event(struct dicm_parser *self) {
     return DICM_DOCUMENT_START_EVENT;
   }
 
-  if (STATE_VALUE == cur_state) {
-    assert(level_parser->da.vl == parser->value_length_pos);
-  }
-  // else get next dicm event:
-  const enum state new_state = level_parser_next_event(
-      level_parser, parser->current_item_state, parser->src);
-  parser->current_item_state = new_state;
-  // at this point level_parser->current_item_state has been updated
-  if (new_state == STATE_VALUE) {
-    parser->value_length_pos = 0;
-  }
-
-  // change level_parser based on state:
-  switch (parser_get_state(parser)) {
+  // change level_parser based on state, user is done with get_key/get_size
+  // calls
+  switch (cur_state) {
   case STATE_STARTSEQUENCE:
     push_level_parser(parser, STATE_STARTSEQUENCE);
     break;
@@ -287,6 +293,22 @@ int dicm_parser_next_event(struct dicm_parser *self) {
     pop_level_parser(parser);
     break;
   default:;
+  }
+
+  struct level_parser *level_parser = parser_get_level_parser(parser);
+  if (STATE_VALUE == cur_state) {
+    assert(level_parser->da.vl == parser->value_length_pos);
+  }
+
+  // else get next dicm event:
+  const enum state new_state = level_parser_next_event(
+      level_parser, parser->current_item_state, parser->src);
+  // do not change level in item array so that get_key/get_size are done at
+  // proper level
+  parser->current_item_state = new_state;
+  // at this point level_parser->current_item_state has been updated
+  if (new_state == STATE_VALUE) {
+    parser->value_length_pos = 0;
   }
 
   if (new_state < 0) {

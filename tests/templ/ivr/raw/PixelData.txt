@@ -1,0 +1,4 @@
+document-start
+key 7fe00010
+value ABCDEFGHIJKLMNOP
+document-end

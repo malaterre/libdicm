@@ -1,0 +1,13 @@
+document-start
+key 00082112
+sequence-start ffffffff
+item-start 0000001a
+key 00081155
+value 1.2.3.4.5.6.7.8.90
+item-end
+item-start ffffffff
+key 00081155
+value 1.2.3.4.5.6.7.8.91
+item-end
+sequence-end
+document-end

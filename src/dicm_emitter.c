@@ -57,8 +57,10 @@ void init_root_level_emitter(struct _level_emitter *new_item,
 #else
 void encap_init_level_emitter(struct level_emitter *new_item);
 void ivrle_init_level_emitter(struct level_emitter *new_item);
-void evrle_init_level_emitter(struct level_emitter *new_item);
+void evrle_init_level_emitter(struct level_emitter *const new_item);
 void evrbe_init_level_emitter(struct level_emitter *new_item);
+
+void init_level_emitter_item(struct level_emitter *new_item);
 #endif
 
 static inline void
@@ -112,21 +114,31 @@ static inline void emitter_push_level(struct emitter *emitter,
 
 static inline void emitter_pop_level(struct emitter *emitter,
                                      const enum state current_state) {
-  (void)current_state;
+  struct level_emitter *level_emitter_old = emitter_get_level_emitter(emitter);
   (void)array_pop(emitter->level_emitters);
+  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
+  //  assert(level_emitter->da.vl == level_emitter->sequence_length);
+  assert(level_emitter_old->sequence_length_pos ==
+             level_emitter_old->sequence_length2 ||
+         level_emitter_old->sequence_length2 == VL_UNDEFINED);
+  level_emitter->item_length_pos += level_emitter_old->sequence_length_pos;
+  assert(level_emitter->item_length_pos <= level_emitter->item_length2);
 }
 
 static enum state emitter_emit(struct emitter *emitter,
                                const enum dicm_event_type next) {
-  assert(emitter->current_item_state != STATE_INVALID);
-  assert(next >= 0);
+  ASSUME(emitter->current_item_state != STATE_INVALID);
+  ASSUME(next >= 0);
   // special init case
-  if (emitter_get_state(emitter) == STATE_INIT) {
+  if (next == DICM_DOCUMENT_START_EVENT) {
+    assert(emitter_get_state(emitter) == STATE_INIT);
     assert(emitter->dst);
-    assert(next == DICM_DOCUMENT_START_EVENT);
     emitter->current_item_state = STATE_STARTDOCUMENT;
     return STATE_STARTDOCUMENT;
   }
+
+  // user has called set_key / set_size, now compute directly new state using
+  // current level_emitter:
 
   // else compute new state from event:
   struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
@@ -136,10 +148,15 @@ static enum state emitter_emit(struct emitter *emitter,
   // FIXME: should not expose detail frag vs item here:
   switch (new_state) {
   case STATE_STARTSEQUENCE:
+    assert(next == DICM_SEQUENCE_START_EVENT);
+    emitter_push_level(emitter, new_state);
+    break;
   case STATE_STARTFRAGMENTS:
+    assert(next == DICM_SEQUENCE_START_EVENT);
     emitter_push_level(emitter, new_state);
     break;
   case STATE_ENDSEQUENCE:
+    assert(next == DICM_SEQUENCE_END_EVENT);
     emitter_pop_level(emitter, new_state);
     break;
   default:;
@@ -200,30 +217,68 @@ int dicm_emitter_set_key(struct dicm_emitter *self_,
                          const struct dicm_key *key) {
   struct emitter *emitter = (struct emitter *)self_;
   const enum state current_state = emitter_get_state(emitter);
-  assert(current_state == STATE_STARTDOCUMENT || current_state == STATE_VALUE ||
-         current_state == STATE_STARTITEM ||
-         current_state == STATE_ENDSEQUENCE);
+  switch (current_state) {
+  case STATE_STARTDOCUMENT:
+  case STATE_VALUE:
+  case STATE_STARTITEM:
+  case STATE_ENDSEQUENCE: {
+    struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
+    const enum dicm_event_type next = DICM_KEY_EVENT;
+    const enum token token = event2token(next);
+    assert(token == TOKEN_KEY);
+    struct key_info *da = &level_emitter->da;
+    da->tag = key->tag;
+    da->vr = key->vr;
+    /* FIXME: validate key */
+    return 0;
+  } break;
+  default:;
+  }
 
-  struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
-  const enum dicm_event_type next = DICM_KEY_EVENT;
-  const enum token token = event2token(next);
-  assert(token == TOKEN_KEY);
-  struct key_info *da = &level_emitter->da;
-  da->tag = key->tag;
-  da->vr = key->vr;
-  /* FIXME: validate key */
-
-  return 0;
+  return -1;
 }
 
 int dicm_emitter_set_size(struct dicm_emitter *self_, const uint32_t len) {
   struct emitter *emitter = (struct emitter *)self_;
   const enum state current_state = emitter_get_state(emitter);
-  assert(current_state == STATE_KEY || current_state == STATE_FRAGMENT);
-
   struct level_emitter *level_emitter = emitter_get_level_emitter(emitter);
-  struct key_info *da = &level_emitter->da;
-  if (len % 2 == 0) {
+
+  enum state new_state = STATE_INVALID;
+  switch (current_state) {
+  case STATE_KEY:
+    if (len == VL_UNDEFINED || len % 2 == 0) {
+      struct key_info *da = &level_emitter->da;
+      da->vl = len;
+      emitter->value_length_pos = VL_UNDEFINED; // FIXME
+      new_state = current_state;
+    }
+    break;
+  case STATE_STARTSEQUENCE:
+  case STATE_ENDITEM:
+    if (len == VL_UNDEFINED || len % 2 == 0) {
+      level_emitter->item_length2 = len;
+      init_level_emitter_item(level_emitter);
+      new_state = current_state;
+    }
+    break;
+  case STATE_FRAGMENT:
+    if (len == VL_UNDEFINED || len % 2 == 0) {
+      struct key_info *da = &level_emitter->da;
+      da->vl = len;
+      emitter->value_length_pos = VL_UNDEFINED; // FIXME
+      new_state = current_state;
+    }
+    break;
+  default:
+    assert(0);
+  }
+
+#if 0
+  assert(current_state == STATE_STARTSEQUENCE ||
+         current_state == STATE_ENDITEM || current_state == STATE_KEY ||
+         current_state == STATE_FRAGMENT);
+
+  if (len == VL_UNDEFINED || len % 2 == 0) {
     da->vl = len;
     emitter->value_length_pos = VL_UNDEFINED;
 
@@ -231,6 +286,8 @@ int dicm_emitter_set_size(struct dicm_emitter *self_, const uint32_t len) {
   }
   emitter->current_item_state = STATE_INVALID;
   return -1;
+#endif
+  return new_state == STATE_INVALID ? -1 : 0;
 }
 
 int dicm_emitter_write_bytes(struct dicm_emitter *self_, const void *ptr,
@@ -245,18 +302,21 @@ int dicm_emitter_write_bytes(struct dicm_emitter *self_, const void *ptr,
   assert(len <= value_length);
   const uint32_t to_write = (uint32_t)len;
   struct dicm_dst *dst = emitter->dst;
-  const enum token tok = TOKEN_VALUE;
+  //  const enum token tok = TOKEN_VALUE;
   /* Write VL */
   if (emitter->value_length_pos == VL_UNDEFINED) {
-    const enum state new_state =
-        level_emitter_vl_token(level_emitter, dst, tok);
-    assert(new_state == STATE_VALUE);
+    const enum token tok =
+        level_emitter_vl_token(level_emitter, dst, DICM_VALUE_EVENT);
+    assert(tok == TOKEN_VALUE);
+    // FIXME: to_write vs value_length
+    assert(value_length != VL_UNDEFINED);
+    level_emitter->item_length_pos += value_length;
     emitter->value_length_pos = 0;
   }
 
   /* Write actual value */
-  int64_t err = dicm_dst_write(dst, ptr, to_write);
-  assert(err == to_write);
+  int64_t dlen = dicm_dst_write(dst, ptr, to_write);
+  assert(dlen == to_write);
   emitter->value_length_pos += to_write;
   assert(emitter->value_length_pos <= level_emitter->da.vl);
 

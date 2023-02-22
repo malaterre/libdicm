@@ -1,0 +1,4 @@
+document-start
+key 00880200
+value þÿ
+document-end

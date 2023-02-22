@@ -71,7 +71,7 @@ int emitting(int argc, char *argv[]) {
   while ((line = fgets(buf, sizeof buf, in))) {
     ret = EXIT_FAILURE;
     fprintf(stdout, "%s\n", line);
-    enum dicm_event_type etype = get_type(line);
+    const enum dicm_event_type etype = get_type(line);
     switch (etype) {
     case DICM_KEY_EVENT:
       res = sscanf(line, "%*s %08x %s", &tag, vr_str);
@@ -94,6 +94,13 @@ int emitting(int argc, char *argv[]) {
       res = dicm_emitter_set_size(emitter, size);
       assert(res == 0);
       res = dicm_emitter_write_bytes(emitter, buf, size);
+      assert(res == 0);
+      break;
+    case DICM_ITEM_START_EVENT:
+    case DICM_SEQUENCE_START_EVENT:
+      res = sscanf(line, "%*s %08x", &size);
+      assert(res == 1);
+      res = dicm_emitter_set_size(emitter, size);
       assert(res == 0);
       break;
     case DICM_DOCUMENT_END_EVENT:

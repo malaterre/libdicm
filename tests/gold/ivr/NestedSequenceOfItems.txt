@@ -1,0 +1,16 @@
+document-start
+key 00082112
+sequence-start ffffffff
+item-start ffffffff
+key 00081155
+value 1.2.3.4.5.6.7.8.90
+key 0040a170
+sequence-start ffffffff
+item-start ffffffff
+key 00080104
+value Nested Sequence of Items
+item-end
+sequence-end
+item-end
+sequence-end
+document-end

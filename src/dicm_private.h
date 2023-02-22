@@ -129,7 +129,7 @@ struct _ede16 {
   uint16_t vl16;
 }; // explicit data element, VR/VL 16. 8 bytes
 
-struct _ide {
+struct ide {
   uint32_t tag;
   uint32_t vl;
 }; // implicit data element. 8 bytes
@@ -138,29 +138,32 @@ union _ude {
   uint32_t bytes[4];   // 16 bytes, 32bits aligned
   struct _ede32 ede32; // explicit data element (12 bytes)
   struct _ede16 ede16; // explicit data element (8 bytes)
-  struct _ide ide;     // implicit data element (8 bytes)
+  struct ide ide;      // implicit data element (8 bytes)
 };
 
 struct _ede {
   union {
     struct {
-      uint32_t tag1;
+      uint32_t tag;
       uint32_t vr32;
       uint32_t vl32;
     }; // explicit data element. 12 bytes
     struct {
-      uint32_t tag2;
+      uint32_t : 32; /* tag */
       uint16_t vr16;
       uint16_t vl16;
     }; // explicit data element, VR/VL 16. 8 bytes
-    uint32_t tag;
   };
 };
 
+/* raw byte buffer to read from the stream, this handles the 8 vs 12 bytes
+ * buffer logic */
+/* bytes must be byte-swapped before interpretation */
 struct dual {
+  /* naming does not contains le or be since bytes have not yet been swapped */
   union {
     struct _ede evr; // explicit data element (8/12 bytes)
-    struct _ide ivr; // implicit data element (8 bytes)
+    struct ide ivr;  // implicit data element (8 bytes)
   };
 };
 
@@ -248,7 +251,7 @@ enum state {
 };
 
 enum token {
-  /* key (data element tag+vr) */
+  /* key (data element tag+vr+vl) */
   TOKEN_KEY = 0,
   /* data value, only when not undefined length */
   TOKEN_VALUE,
@@ -379,5 +382,15 @@ static inline enum token event2token(const enum dicm_event_type event_type) {
 static inline bool is_aligned(const void *restrict pointer, size_t byte_count) {
   return (uintptr_t)pointer % byte_count == 0;
 }
+
+#ifdef NDEBUG
+#define ASSUME(expr)                                                           \
+  do {                                                                         \
+    if (!(expr))                                                               \
+      __builtin_unreachable();                                                 \
+  } while (0)
+#else
+#define ASSUME(expr) assert(expr)
+#endif
 
 #endif /* DICM_PRIVATE_H */

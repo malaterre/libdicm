@@ -1,0 +1,9 @@
+document-start
+key 7fe00010 OB
+sequence-start ffffffff
+fragment
+value 0123456789
+fragment
+value ABCDEFGHIJKLMNOP
+sequence-end
+document-end

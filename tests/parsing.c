@@ -89,7 +89,7 @@ int parsing(int argc, char *argv[]) {
       goto error;
     }
     /* Get the next event. */
-    enum dicm_event_type etype = next;
+    const enum dicm_event_type etype = next;
 
     /*
     ...
@@ -123,6 +123,12 @@ int parsing(int argc, char *argv[]) {
       } while (size != 0);
       fprintf(out, "%s", events[etype]);
       fprintf(out, " %.*s", (int)oldsize, buf);
+      break;
+    case DICM_ITEM_START_EVENT:
+    case DICM_SEQUENCE_START_EVENT:
+      res = dicm_parser_get_size(parser, &size);
+      assert(res == 0);
+      fprintf(out, "%s %08x", events[etype], size);
       break;
     default:
       res = dicm_parser_get_key(parser, &key);

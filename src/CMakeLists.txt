@@ -6,6 +6,7 @@ set(dicm_SOURCES
     dicm_log.c
     dicm_object.c
     dicm_parser.c
+    dicm_sequence.c
     dicm_src.c
     dicm_version.c)
 if(DICM_ENABLE_STRUCTURE_ENCAPSULATED)
