@@ -7,6 +7,7 @@ project(
   LANGUAGES C)
 
 set(DICM_SOVERSION "${DICM_VERSION_MAJOR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 option(DICM_BUILD_EXAMPLES "Build DICM examples directory" OFF)
 
