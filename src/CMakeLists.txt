@@ -22,6 +22,9 @@ if(DICM_ENABLE_STRUCTURE_IMPLICT)
 endif()
 
 add_library(dicm SHARED ${dicm_SOURCES})
+set_source_files_properties(${PROJECT_SOURCE_DIR}/cpp.hint
+                            PROPERTIES HEADER_FILE_ONLY TRUE)
+target_sources(dicm PRIVATE ${PROJECT_SOURCE_DIR}/cpp.hint)
 set_target_properties(dicm PROPERTIES VERSION ${DICM_VERSION} SOVERSION
                                                               ${DICM_SOVERSION})
 
